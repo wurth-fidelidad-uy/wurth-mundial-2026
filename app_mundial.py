@@ -13,12 +13,12 @@ ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&
 
 st.markdown(f"""
 <style>
-    /* Fuentes Personalizadas */
+    /* 1. Fuentes Personalizadas */
     @font-face {{ font-family: 'WuerthExtra'; src: url('WuerthExtraBoldCond.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBold'; src: url('WuerthBold.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBook'; src: url('WuerthBook.ttf') format('truetype'); }}
 
-    /* Estilos Generales */
+    /* 2. Estilos Generales */
     html, body, [class*="css"], .stDataFrame, .stText, p, span, div {{
         font-family: 'WuerthBook', sans-serif;
         color: #ffffff !important;
@@ -31,7 +31,7 @@ st.markdown(f"""
         text-shadow: 0 3px 6px rgba(0,0,0,0.9);
     }}
 
-    /* Fondo de Estadio */
+    /* 3. Fondo de Estadio */
     .stApp {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('{ESTADIO_BG}');
         background-size: cover;
@@ -39,14 +39,14 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
     
-    /* Separadores Verticales */
+    /* 4. Separadores Verticales */
     [data-testid="column"] {{
         border-right: 1px solid rgba(255, 255, 255, 0.2);
         padding-right: 15px; padding-left: 15px;
     }}
     [data-testid="column"]:last-child {{ border-right: none; }}
 
-    /* Tarjetas */
+    /* 5. Tarjetas */
     .fifa-card {{
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -96,6 +96,7 @@ st.markdown(f"""
 
 # --- 3. FUNCIONES AUXILIARES ---
 
+@st.cache_data
 def get_image_as_base64(path):
     """Convierte una imagen local a base64 para mostrarla en HTML."""
     try:
@@ -113,16 +114,18 @@ def format_score(val):
 def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     score_display = format_score(score_raw)
     
-    # Lógica para encontrar la foto del capitán
+    # Lógica para encontrar la foto del capitán (independiente de extensión o mayúsculas)
     img_base64 = None
-    # Probamos con .png y .jpg
-    for ext in [".png", ".jpg", ".jpeg"]:
-        photo_path = f"{capitan.strip()}{ext}"
-        if os.path.exists(photo_path):
-            img_base64 = get_image_as_base64(photo_path)
-            break
+    if isinstance(capitan, str):
+        capitan_nom = capitan.strip().lower()
+        archivos_en_directorio = os.listdir(".")
+        for archivo in archivos_en_directorio:
+            nombre_archivo, extension = os.path.splitext(archivo)
+            if nombre_archivo.lower() == capitan_nom and extension.lower() in [".png", ".jpg", ".jpeg", ".webp"]:
+                img_base64 = get_image_as_base64(archivo)
+                break
             
-    # Si existe la foto, la usamos; si no, ponemos un icono genérico
+    # Si existe la foto, la usamos; si no, ponemos el emoji de usuario
     if img_base64:
         photo_html = f'<img src="data:image/png;base64,{img_base64}" class="captain-photo">'
     else:
