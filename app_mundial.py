@@ -5,36 +5,51 @@ import os
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon="🏆")
 
-# --- ESTILOS CSS (FONDO DE ESTADIO + TARJETAS) ---
-# URL de una imagen de estadio de uso libre
-ESTADIO_BG_URL = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+# --- ESTILOS CSS (FONDO DE ESTADIO + TARJETAS PREMIUM) ---
+# Usamos una imagen de estadio de alta calidad (libre de derechos)
+ESTADIO_URL = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop"
 
 st.markdown(f"""
 <style>
-    /* FONDO DE ESTADIO */
+    /* 1. Fondo de Estadio con capa oscura para leer bien el texto */
     .stApp {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{ESTADIO_BG_URL}');
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{ESTADIO_URL}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         color: white;
     }}
     
-    /* TARJETAS NEGRAS ESTILO FIFA */
+    /* 2. Tarjetas con efecto 'Glassmorphism' (Vidrio ahumado) */
     .fifa-card {{
-        background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
-        border: 2px solid #333;
-        border-radius: 12px;
-        padding: 15px;
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
         text-align: center;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.8); /* Sombra más intensa */
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
         margin-bottom: 20px;
-        color: white;
-        backdrop-filter: blur(5px); /* Efecto de cristal sobre el fondo */
+        transition: transform 0.3s ease;
     }}
-    .card-title {{ font-size: 18px; font-weight: bold; text-transform: uppercase; color: #fff; text-shadow: 2px 2px 4px #000; }}
-    .card-subtitle {{ font-size: 14px; color: #ccc; margin-bottom: 10px; }}
+    
+    .fifa-card:hover {{
+        transform: translateY(-5px);
+        border-color: #cc0000; /* Detalle rojo al pasar el mouse */
+    }}
+
+    /* 3. Tipografía y Detalles */
+    .card-title {{ 
+        font-size: 20px; 
+        font-weight: 900; 
+        text-transform: uppercase; 
+        color: #fff; 
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }}
+    .card-subtitle {{ font-size: 14px; color: #ccc; margin-bottom: 15px; font-style: italic; }}
+    
+    /* Cajas de Estadísticas */
     .stat-box {{ 
-        background-color: rgba(34, 34, 34, 0.8); 
-        border-radius: 5px; padding: 5px; 
-        font-size: 13px; margin-top: 5
+        background-color: rgba(
