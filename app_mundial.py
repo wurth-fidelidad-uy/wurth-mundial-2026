@@ -8,18 +8,17 @@ st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon=
 # ==============================================================================
 # 🎨 ESTILOS CSS Y FUENTES LOCALES
 # ==============================================================================
-# Nota: Streamlit busca estos archivos en la misma carpeta que este script
 ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop"
 
 st.markdown(f"""
 <style>
-    /* 1. Fuentes Personalizadas (Carga Local) */
+    /* 1. Fuentes Personalizadas */
     @font-face {{ font-family: 'WuerthExtra'; src: url('WuerthExtraBoldCond.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBold'; src: url('WuerthBold.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBook'; src: url('WuerthBook.ttf') format('truetype'); }}
 
     /* 2. Estilos Generales */
-    html, body, [class*="css"], .stMarkdown, .stText, p, span, div {{
+    html, body, [class*="css"], .stDataFrame, .stText, p, span, div {{
         font-family: 'WuerthBook', sans-serif;
         color: #ffffff !important;
         font-size: 18px;
@@ -75,10 +74,8 @@ st.markdown(f"""
         text-shadow: 2px 2px 4px #000;
     }}
 
-    .highlight-gold {{ border: 3px solid #FFD700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }}
-    .highlight-silver {{ border: 3px solid #C0C0C0; box-shadow: 0 0 25px rgba(192, 192, 192, 0.4); }}
-    .highlight-bronze {{ border: 3px solid #CD7F32; box-shadow: 0 0 25px rgba(205, 127, 50, 0.4); }}
-    .stDataFrame {{ background-color: rgba(0,0,0,0.7); border-radius: 10px; padding: 10px; }}
+    /* Estilos de tabla transparente y sin bordes feos */
+    .stDataFrame {{ background-color: rgba(0,0,0,0.6) !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -103,16 +100,12 @@ def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-# --- 4. HEADER INTELIGENTE ---
+# --- 4. HEADER ---
 c1, c2 = st.columns([1.5, 6])
 with c1:
-    # Intenta cargar el logo localmente. Si falla, pone un trofeo.
-    # IMPORTANTE: El archivo debe llamarse 'logo_wurth.png' en GitHub
     if os.path.exists("logo_wurth.png"):
         st.image("logo_wurth.png", use_container_width=True)
     else:
-        # Si no encuentra el archivo, muestra esto para avisarte
-        st.warning("⚠️") 
         st.markdown("<div style='font-size: 80px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
 
 with c2:
@@ -126,10 +119,11 @@ try:
     df = pd.read_excel(archivo_excel)
     datos_cargados = True
 except FileNotFoundError:
-    st.error(f"⚠️ ERROR CRÍTICO: No encuentro '{archivo_excel}'. Súbelo a GitHub.")
+    st.error(f"⚠️ ERROR: No encuentro '{archivo_excel}'. Súbelo a GitHub.")
     datos_cargados = False
 
 if datos_cargados:
+    # Lógica de clasificación (Igual que siempre)
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -152,10 +146,30 @@ if datos_cargados:
     # --- 6. VISUALIZACIÓN ---
     tab1, tab2, tab_mundial, tab_conf = st.tabs(["📢 FASE 1: SORTEO", "⚔️ FASE 2: GRUPOS", "🏆 FINAL: MUNDIAL", "🥈 FINAL: CONFEDERACIONES"])
     
+    # --- PESTAÑA 1 ---
     with tab1:
         st.markdown("### 📊 Ranking Inicial")
-        st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
+        # 1. Seleccionamos columnas
+        df_display = df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo')
+        
+        # 2. RENOMBRAMOS PARA MOSTRAR "COMERCIAL"
+        df_display = df_display.rename(columns={
+            'F1_Venta_23_Ene_Porcentaje': 'Resultado Final',
+            'Capitan': 'Capitán'
+        })
+        
+        # 3. CÁLCULO DE ALTURA PARA EVITAR SCROLL
+        # (Filas + 1 cabecera) * 35 pixeles por fila (aprox)
+        altura_tabla = (len(df_display) + 1) * 38 
+        
+        st.dataframe(
+            df_display, 
+            hide_index=True, 
+            use_container_width=True, 
+            height=altura_tabla  # <--- AQUÍ ESTÁ EL TRUCO
+        )
 
+    # --- PESTAÑA 2 ---
     with tab2:
         st.markdown("### ⚔️ Fase de Grupos")
         st.markdown("<br>", unsafe_allow_html=True)
@@ -166,8 +180,10 @@ if datos_cargados:
                 df_grupo = df[df['Grupo'] == grupo]
                 for _, row in df_grupo.iterrows():
                     estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
+                    # Aquí cambiamos la etiqueta de la tarjeta manualmente
                     draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
+    # --- PESTAÑA 3 ---
     with tab_mundial:
         st.markdown("## 🌍 FINAL COPA DEL MUNDO")
         df_mundial = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
@@ -186,11 +202,22 @@ if datos_cargados:
                     st.markdown("### ⏳ Esperando...")
                     draw_card(best['Equipo'], best['Capitan'], val, "Pedidos/Día")
             with c2:
-                st.write("Tabla:")
+                st.write("Tabla de Posiciones:")
                 df_show = df_mundial[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
-                df_show['F3_Pedidos_Por_Dia'] = df_show['F3_Pedidos_Por_Dia'].apply(format_score)
-                st.dataframe(df_show, hide_index=True, use_container_width=True)
+                
+                # RENOMBRAR COMERCIAL
+                df_show = df_show.rename(columns={
+                    'F3_Pedidos_Por_Dia': 'Pedidos por Día',
+                    'Capitan': 'Capitán'
+                })
+                
+                df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
+                
+                # ALTURA SIN SCROLL
+                altura_mundial = (len(df_show) + 1) * 38
+                st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_mundial)
 
+    # --- PESTAÑA 4 ---
     with tab_conf:
         st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
         df_conf = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
@@ -206,7 +233,19 @@ if datos_cargados:
                 with [c1, c2, c3][i]:
                     st.markdown(f"<h4 style='text-align:center'>{medals[i]}</h4>", unsafe_allow_html=True)
                     draw_card(row['Equipo'], row['Capitan'], val, "Pedidos/Día", estilo)
+            
             st.divider()
+            st.write("Tabla General:")
             df_show = df_conf[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
-            df_show['F3_Pedidos_Por_Dia'] = df_show['F3_Pedidos_Por_Dia'].apply(format_score)
-            st.dataframe(df_show, hide_index=True, use_container_width=True)
+            
+            # RENOMBRAR COMERCIAL
+            df_show = df_show.rename(columns={
+                'F3_Pedidos_Por_Dia': 'Pedidos por Día',
+                'Capitan': 'Capitán'
+            })
+            
+            df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
+            
+            # ALTURA SIN SCROLL
+            altura_conf = (len(df_show) + 1) * 38
+            st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_conf)
