@@ -7,24 +7,31 @@ import base64
 st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon="🏆")
 
 # ==============================================================================
-# 🎨 ESTILOS CSS
+# 🎨 ESTILOS CSS (DISEÑO VISUAL + FOTOS CIRCULARES)
 # ==============================================================================
 ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop"
 
 st.markdown(f"""
 <style>
+    /* Fuentes Personalizadas */
     @font-face {{ font-family: 'WuerthExtra'; src: url('WuerthExtraBoldCond.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBold'; src: url('WuerthBold.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBook'; src: url('WuerthBook.ttf') format('truetype'); }}
 
+    /* Estilos Generales */
     html, body, [class*="css"], .stDataFrame, .stText, p, span, div {{
         font-family: 'WuerthBook', sans-serif;
         color: #ffffff !important;
         font-size: 18px;
     }}
     
-    h1, h2, h3, h4 {{ font-family: 'WuerthExtra', sans-serif !important; color: white !important; }}
+    h1, h2, h3, h4 {{
+        font-family: 'WuerthExtra', sans-serif !important;
+        color: white !important;
+        text-shadow: 0 3px 6px rgba(0,0,0,0.9);
+    }}
 
+    /* Fondo de Estadio */
     .stApp {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('{ESTADIO_BG}');
         background-size: cover;
@@ -32,9 +39,14 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
     
-    [data-testid="column"] {{ border-right: 1px solid rgba(255, 255, 255, 0.2); padding: 0 15px; }}
+    /* Separadores Verticales */
+    [data-testid="column"] {{
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        padding-right: 15px; padding-left: 15px;
+    }}
     [data-testid="column"]:last-child {{ border-right: none; }}
 
+    /* Tarjetas */
     .fifa-card {{
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -43,38 +55,55 @@ st.markdown(f"""
         text-align: center;
         box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
+        transition: transform 0.2s;
+    }}
+    .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
+
+    /* Estilo de la Foto del Capitán */
+    .captain-photo {{
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #cc0000;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     }}
 
-    .card-title {{ font-family: 'WuerthExtra'; font-size: 26px; text-transform: uppercase; color: #fff !important; margin-bottom: 5px; }}
-    .card-subtitle {{ font-family: 'WuerthBold'; font-size: 16px; color: #ddd !important; margin-bottom: 15px; }}
-    
+    .card-title {{ 
+        font-family: 'WuerthExtra'; font-size: 26px; text-transform: uppercase; color: #fff !important; margin-bottom: 5px; 
+    }}
+    .card-subtitle {{ 
+        font-family: 'WuerthBold'; font-size: 16px; color: #ddd !important; margin-bottom: 15px; 
+    }}
     .stat-box {{ 
         background-color: rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px; margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
     }}
-
-    .group-header {{
-        text-align: center; font-family: 'WuerthExtra'; font-size: 35px; border-bottom: 3px solid #cc0000; margin-bottom: 20px;
-    }}
-
-    .highlight-gold {{ border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important; }}
     
-    /* Estilo para el botón de Streamlit para que parezca de fútbol */
-    .stButton>button {{
-        background-color: transparent;
-        border: 1px solid #cc0000;
-        color: white;
-        border-radius: 20px;
-        width: 100%;
-        font-family: 'WuerthBold';
+    .group-header {{
+        text-align: center; font-family: 'WuerthExtra'; font-size: 35px; color: white;
+        border-bottom: 3px solid #cc0000; margin-bottom: 20px; padding-bottom: 5px;
+        text-shadow: 2px 2px 4px #000;
     }}
-    .stButton>button:hover {{
-        background-color: #cc0000;
-        color: white;
-    }}
+
+    .stDataFrame {{ background-color: rgba(0,0,0,0.6) !important; }}
+    
+    .highlight-gold {{ border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important; }}
+    .highlight-silver {{ border-color: #C0C0C0 !important; }}
+    .highlight-bronze {{ border-color: #CD7F32 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
 # --- 3. FUNCIONES AUXILIARES ---
+
+def get_image_as_base64(path):
+    """Convierte una imagen local a base64 para mostrarla en HTML."""
+    try:
+        with open(path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
 
 def format_score(val):
     if pd.isna(val) or val == "": return "-"
@@ -84,10 +113,24 @@ def format_score(val):
 def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     score_display = format_score(score_raw)
     
-    # HTML de la tarjeta (sin la foto, solo con el icono de usuario)
+    # Lógica para encontrar la foto del capitán
+    img_base64 = None
+    # Probamos con .png y .jpg
+    for ext in [".png", ".jpg", ".jpeg"]:
+        photo_path = f"{capitan.strip()}{ext}"
+        if os.path.exists(photo_path):
+            img_base64 = get_image_as_base64(photo_path)
+            break
+            
+    # Si existe la foto, la usamos; si no, ponemos un icono genérico
+    if img_base64:
+        photo_html = f'<img src="data:image/png;base64,{img_base64}" class="captain-photo">'
+    else:
+        photo_html = '<div style="font-size: 60px; margin-bottom: 10px;">👤</div>'
+
     card_html = f"""
     <div class="fifa-card {border_class}">
-        <div style="font-size: 50px; margin-bottom: 10px;">👤</div>
+        {photo_html}
         <div class="card-title">{equipo}</div>
         <div class="card-subtitle">{capitan}</div>
         <div class="stat-box">
@@ -97,27 +140,6 @@ def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     </div>
     """
     st.markdown(card_html, unsafe_allow_html=True)
-    
-    # BOTÓN INDEPENDIENTE PARA CARGAR LA IMAGEN
-    if st.button(f"🔎 Ver Capitán: {equipo}", key=f"btn_{equipo}"):
-        show_captain_modal(capitan)
-
-@st.dialog("Perfil del Capitán")
-def show_captain_modal(capitan):
-    st.write(f"### {capitan}")
-    
-    # Buscador de imagen en la carpeta local
-    img_path = None
-    for ext in [".jpg", ".jpeg", ".png", ".JPG"]:
-        test_path = f"{capitan.strip()}{ext}"
-        if os.path.exists(test_path):
-            img_path = test_path
-            break
-            
-    if img_path:
-        st.image(img_path, caption=f"Líder de equipo", use_container_width=True)
-    else:
-        st.warning(f"No se encontró la foto para {capitan}. Verifica que el archivo se llame exactamente '{capitan}.jpg' en GitHub.")
 
 # --- 4. HEADER ---
 c1, c2 = st.columns([1.5, 6])
@@ -126,7 +148,9 @@ with c1:
         st.image("logo_wurth.png", use_container_width=True)
     else:
         st.markdown("<div style='font-size: 80px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
+
 with c2:
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     st.title("WÜRTH WORLD CUP 2026")
     st.markdown("##### ⚽ Tablero Oficial de Competencia")
 
@@ -136,14 +160,16 @@ try:
     df = pd.read_excel(archivo_excel)
     datos_cargados = True
 except FileNotFoundError:
-    st.error(f"⚠️ ERROR: No encuentro '{archivo_excel}'.")
+    st.error(f"⚠️ ERROR: No encuentro '{archivo_excel}'. Súbelo a GitHub.")
     datos_cargados = False
 
 if datos_cargados:
+    # Ordenar por Ranking Inicial
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
+    # Cálculo de puntos
     df['Puntos_Fase2'] = 0
     reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
     for grupo in grupos_labels:
@@ -155,21 +181,24 @@ if datos_cargados:
                 ganadores = df_g[df_g[kpi] == max_val].index
                 df.loc[ganadores, 'Puntos_Fase2'] += pts
 
+    # Destinos Finales
     df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
     # --- 6. VISUALIZACIÓN ---
-    tab1, tab2, tab_mundial, tab_conf = st.tabs(["📢 SORTEO", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES"])
+    tab1, tab2, tab_mundial, tab_conf = st.tabs(["📢 FASE 1: SORTEO", "⚔️ FASE 2: GRUPOS", "🏆 FINAL: MUNDIAL", "🥈 FINAL: CONFEDERACIONES"])
     
     with tab1:
         st.markdown("### 📊 Ranking Inicial")
         df_display = df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo')
         df_display = df_display.rename(columns={'F1_Venta_23_Ene_Porcentaje': 'Resultado Final', 'Capitan': 'Capitán'})
-        st.dataframe(df_display, hide_index=True, use_container_width=True, height=(len(df_display)+1)*38)
+        altura_tabla = (len(df_display) + 1) * 38 
+        st.dataframe(df_display, hide_index=True, use_container_width=True, height=altura_tabla)
 
     with tab2:
         st.markdown("### ⚔️ Fase de Grupos")
+        st.markdown("<br>", unsafe_allow_html=True)
         cols = st.columns(4)
         for i, grupo in enumerate(grupos_labels):
             with cols[i]:
@@ -197,10 +226,12 @@ if datos_cargados:
                     st.markdown("### ⏳ Esperando...")
                     draw_card(best['Equipo'], best['Capitan'], val, "Pedidos/Día")
             with c2:
+                st.write("Tabla de Posiciones:")
                 df_show = df_mundial[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
                 df_show = df_show.rename(columns={'F3_Pedidos_Por_Dia': 'Pedidos por Día', 'Capitan': 'Capitán'})
                 df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
-                st.dataframe(df_show, hide_index=True, use_container_width=True)
+                altura_mundial = (len(df_show) + 1) * 38
+                st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_mundial)
 
     with tab_conf:
         st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
@@ -217,3 +248,11 @@ if datos_cargados:
                 with [c1, c2, c3][i]:
                     st.markdown(f"<h4 style='text-align:center'>{medals[i]}</h4>", unsafe_allow_html=True)
                     draw_card(row['Equipo'], row['Capitan'], val, "Pedidos/Día", estilo)
+            
+            st.divider()
+            st.write("Tabla General:")
+            df_show = df_conf[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
+            df_show = df_show.rename(columns={'F3_Pedidos_Por_Dia': 'Pedidos por Día', 'Capitan': 'Capitán'})
+            df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
+            altura_conf = (len(df_show) + 1) * 38
+            st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_conf)
