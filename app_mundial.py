@@ -260,7 +260,7 @@ if datos_cargados:
         # Enlace externo estilizado como botón
         st.markdown(f"""
             <a href="http://www.wurth.com.uy" target="_blank" class="external-link-btn">
-                VER DISEÑO DE EQUIPOS 🔗
+                VER LA TARJETA DE CADA EQUIPO 🔗
             </a>
         """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
