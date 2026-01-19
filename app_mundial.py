@@ -7,102 +7,110 @@ st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon=
 # ==============================================================================
 # ⬇️ DATOS DE TU REPOSITORIO (¡EDITAR ESTO!) ⬇️
 # ==============================================================================
-# Escribe aquí tu usuario de GitHub y el nombre exacto de tu repositorio
-USUARIO_GITHUB = "wurth-fidelidad-uy"  # Ej: "juanperez"
-NOMBRE_REPO = "wurth-mundial-2026"  # Ej: "wurth-mundial-2026"
-RAMA = "main" # Generalmente es 'main' o 'master'
+USUARIO_GITHUB = "TU_USUARIO"  # <--- PON TU USUARIO AQUI
+NOMBRE_REPO = "wurth-mundial-2026"   # <--- PON TU REPO AQUI
+RAMA = "main"
 
-# Construimos las URLs automáticas (No toques esto, se hace solo)
+# URLs automáticas
 BASE_URL = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{NOMBRE_REPO}/{RAMA}"
 URL_FUENTE_BOLD = f"{BASE_URL}/WuerthBold.ttf"
 URL_FUENTE_BOOK = f"{BASE_URL}/WuerthBook.ttf"
 URL_FUENTE_EXTRA = f"{BASE_URL}/WuerthExtraBoldCond.ttf"
-URL_LOGO_IMG = f"{BASE_URL}/logo_wurth.png" # Asegúrate de que tu imagen se llame así en GitHub
+URL_LOGO_IMG = f"{BASE_URL}/logo_wurth.png"
 ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop"
 
 # ==============================================================================
-# 🎨 ESTILOS CSS CON TIPOGRAFÍA WÜRTH
+# 🎨 ESTILOS CSS CORREGIDOS (TEXTOS BLANCOS Y SEPARADORES)
 # ==============================================================================
 st.markdown(f"""
 <style>
-    /* 1. Definición de Fuentes Corporativas */
-    @font-face {{
-        font-family: 'WuerthExtra';
-        src: url('{URL_FUENTE_EXTRA}') format('truetype');
-    }}
-    @font-face {{
-        font-family: 'WuerthBold';
-        src: url('{URL_FUENTE_BOLD}') format('truetype');
-    }}
-    @font-face {{
-        font-family: 'WuerthBook';
-        src: url('{URL_FUENTE_BOOK}') format('truetype');
-    }}
+    /* 1. Definición de Fuentes */
+    @font-face {{ font-family: 'WuerthExtra'; src: url('{URL_FUENTE_EXTRA}') format('truetype'); }}
+    @font-face {{ font-family: 'WuerthBold'; src: url('{URL_FUENTE_BOLD}') format('truetype'); }}
+    @font-face {{ font-family: 'WuerthBook'; src: url('{URL_FUENTE_BOOK}') format('truetype'); }}
 
-    /* 2. Aplicación de Fuentes */
-    html, body, [class*="css"] {{
-        font-family: 'WuerthBook', sans-serif; /* Texto general */
+    /* 2. FORZAR TEXTOS BLANCOS Y GRANDES */
+    html, body, [class*="css"], .stMarkdown, .stText, p, span, div {{
+        font-family: 'WuerthBook', sans-serif;
+        color: #ffffff !important; /* Blanco puro forzado */
+        font-size: 18px; /* Texto base más grande */
     }}
-    h1, h2, h3, .card-title {{
-        font-family: 'WuerthExtra', sans-serif !important; /* Títulos fuertes */
-        letter-spacing: 1px;
-    }}
-    .card-subtitle, strong, .stTabs button {{
-        font-family: 'WuerthBold', sans-serif !important; /* Subtítulos */
+    
+    /* Títulos */
+    h1, h2, h3, h4 {{
+        font-family: 'WuerthExtra', sans-serif !important;
+        color: white !important;
+        text-shadow: 0 3px 6px rgba(0,0,0,0.9); /* Sombra para leer mejor */
     }}
 
     /* 3. Fondo de Estadio */
     .stApp {{
-        background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('{ESTADIO_BG}');
+        background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('{ESTADIO_BG}');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: white;
     }}
     
-    /* 4. Tarjetas Premium */
+    /* 4. SEPARADORES VERTICALES ENTRE GRUPOS */
+    /* Esto agrega una linea a la derecha de las columnas en la vista de escritorio */
+    [data-testid="column"] {{
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        padding-right: 15px;
+        padding-left: 15px;
+    }}
+    [data-testid="column"]:last-child {{
+        border-right: none;
+    }}
+
+    /* 5. Tarjetas */
     .fifa-card {{
-        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
         padding: 20px;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        backdrop-filter: blur(5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
-        transition: transform 0.3s ease;
+        transition: transform 0.2s;
     }}
-    .fifa-card:hover {{ 
-        transform: translateY(-5px); 
-        border-color: #cc0000; 
-    }}
+    .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
 
-    /* Estilos de Texto en Tarjetas */
+    /* Textos dentro de la tarjeta */
     .card-title {{ 
-        font-size: 24px; /* Un poco más grande con la nueva fuente */
-        text-transform: uppercase; 
-        color: #fff; margin-bottom: 5px; 
+        font-family: 'WuerthExtra'; font-size: 26px; /* Más grande */
+        text-transform: uppercase; color: #fff !important; margin-bottom: 5px; 
     }}
     .card-subtitle {{ 
-        font-size: 15px; color: #ccc; margin-bottom: 15px; 
+        font-family: 'WuerthBold'; font-size: 16px; color: #ddd !important; /* Gris muy claro */
+        margin-bottom: 15px; 
     }}
     
-    /* Cajas de Estadísticas */
+    /* Caja de Estadísticas (Corregido color oscuro) */
     .stat-box {{ 
-        background-color: rgba(255, 255, 255, 0.08); 
+        background-color: rgba(255, 255, 255, 0.15); /* Fondo un poco más claro */
         border-radius: 8px; padding: 10px; 
-        font-size: 14px; margin-top: 10px; 
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
     }}
     
+    /* Títulos de Grupo Centrados */
+    .group-header {{
+        text-align: center;
+        font-family: 'WuerthExtra';
+        font-size: 35px;
+        color: white;
+        border-bottom: 3px solid #cc0000; /* Linea roja Würth */
+        margin-bottom: 20px;
+        padding-bottom: 5px;
+        text-shadow: 2px 2px 4px #000;
+    }}
+
     /* Bordes de Ganadores */
-    .highlight-gold {{ border: 2px solid #FFD700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }}
-    .highlight-silver {{ border: 2px solid #C0C0C0; box-shadow: 0 0 25px rgba(192, 192, 192, 0.3); }}
-    .highlight-bronze {{ border: 2px solid #CD7F32; box-shadow: 0 0 25px rgba(205, 127, 50, 0.3); }}
+    .highlight-gold {{ border: 3px solid #FFD700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }}
+    .highlight-silver {{ border: 3px solid #C0C0C0; box-shadow: 0 0 25px rgba(192, 192, 192, 0.4); }}
+    .highlight-bronze {{ border: 3px solid #CD7F32; box-shadow: 0 0 25px rgba(205, 127, 50, 0.4); }}
     
-    /* Ajustes Generales */
-    h1, h2, h3 {{ color: white !important; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }}
-    .stDataFrame {{ background-color: rgba(0,0,0,0.6); border-radius: 10px; padding: 10px; }}
+    /* Tablas */
+    .stDataFrame {{ background-color: rgba(0,0,0,0.7); border-radius: 10px; padding: 10px; }}
     
 </style>
 """, unsafe_allow_html=True)
@@ -115,39 +123,35 @@ def format_score(val):
 
 def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     score_display = format_score(score_raw)
+    # Nota: Usamos style='color: white' explícito para asegurar legibilidad
     card_html = f"""
     <div class="fifa-card {border_class}">
-        <div style="font-size: 45px; margin-bottom: 10px;">👕</div>
+        <div style="font-size: 50px; margin-bottom: 10px;">👕</div>
         <div class="card-title">{equipo}</div>
         <div class="card-subtitle">{capitan}</div>
         <div class="stat-box">
-            <span style="color: #aaa; font-size: 12px; font-family: 'WuerthBook';">{label_score}</span><br>
-            <strong style="font-size: 20px;">{score_display}</strong>
+            <span style="color: #eee; font-family: 'WuerthBook'; font-size: 14px;">{label_score}</span><br>
+            <strong style="color: #fff; font-size: 24px; font-family: 'WuerthBold';">{score_display}</strong>
         </div>
     </div>
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-# --- 4. HEADER CON LOGO Y TÍTULO ---
-# Usamos columnas para poner el logo a la izquierda y el título al lado
+# --- 4. HEADER ---
 c1, c2 = st.columns([1.5, 6])
-
 with c1:
-    # Mostramos el logo cargado desde GitHub
     try:
         st.image(URL_LOGO_IMG, use_container_width=True) 
     except:
-        # Si falla (por ejemplo si no has subido la imagen aun), mostramos un icono
-        st.markdown("<div style='font-size: 70px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 80px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
 
 with c2:
-    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     st.title("WÜRTH WORLD CUP 2026")
     st.markdown("##### ⚽ Tablero Oficial de Competencia")
 
-# --- 5. LOGICA DE DATOS (Igual que antes) ---
+# --- 5. LÓGICA ---
 archivo_excel = "Planilla_Wurth_World_Cup_2026.xlsx"
-
 try:
     df = pd.read_excel(archivo_excel)
     datos_cargados = True
@@ -156,7 +160,7 @@ except FileNotFoundError:
     datos_cargados = False
 
 if datos_cargados:
-    # Procesamiento
+    # Lógica de negocio (Igual que antes)
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -176,7 +180,7 @@ if datos_cargados:
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
-    # Visualización
+    # --- 6. VISUALIZACIÓN ---
     tab1, tab2, tab_mundial, tab_conf = st.tabs(["📢 FASE 1: SORTEO", "⚔️ FASE 2: GRUPOS", "🏆 FINAL: MUNDIAL", "🥈 FINAL: CONFEDERACIONES"])
     
     with tab1:
@@ -185,10 +189,15 @@ if datos_cargados:
 
     with tab2:
         st.markdown("### ⚔️ Fase de Grupos")
+        st.markdown("<br>", unsafe_allow_html=True) # Espacio extra
+        
+        # Columnas con separación visual
         cols = st.columns(4)
         for i, grupo in enumerate(grupos_labels):
             with cols[i]:
-                st.markdown(f"#### GRUPO {grupo}")
+                # Usamos HTML directo para centrar y estilizar el título del grupo
+                st.markdown(f"<div class='group-header'>GRUPO {grupo}</div>", unsafe_allow_html=True)
+                
                 df_grupo = df[df['Grupo'] == grupo]
                 for _, row in df_grupo.iterrows():
                     estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
