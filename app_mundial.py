@@ -13,12 +13,10 @@ ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&
 
 st.markdown(f"""
 <style>
-    /* Fuentes Personalizadas */
     @font-face {{ font-family: 'WuerthExtra'; src: url('WuerthExtraBoldCond.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBold'; src: url('WuerthBold.ttf') format('truetype'); }}
     @font-face {{ font-family: 'WuerthBook'; src: url('WuerthBook.ttf') format('truetype'); }}
 
-    /* Estilos Generales */
     html, body, [class*="css"], .stDataFrame, .stText, p, span, div {{
         font-family: 'WuerthBook', sans-serif;
         color: #ffffff !important;
@@ -31,7 +29,6 @@ st.markdown(f"""
         text-shadow: 0 3px 6px rgba(0,0,0,0.9);
     }}
 
-    /* Fondo de Estadio */
     .stApp {{
         background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('{ESTADIO_BG}');
         background-size: cover;
@@ -39,14 +36,12 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
     
-    /* Separadores Verticales */
     [data-testid="column"] {{
         border-right: 1px solid rgba(255, 255, 255, 0.2);
         padding-right: 15px; padding-left: 15px;
     }}
     [data-testid="column"]:last-child {{ border-right: none; }}
 
-    /* Tarjetas de Resultados */
     .fifa-card {{
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -55,9 +50,7 @@ st.markdown(f"""
         text-align: center;
         box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
-        transition: transform 0.2s;
     }}
-    .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
 
     .card-title {{ font-family: 'WuerthExtra'; font-size: 26px; text-transform: uppercase; color: #fff !important; margin-bottom: 5px; }}
     .card-subtitle {{ font-family: 'WuerthBold'; font-size: 16px; color: #ddd !important; margin-bottom: 15px; }}
@@ -66,20 +59,9 @@ st.markdown(f"""
     .group-header {{
         text-align: center; font-family: 'WuerthExtra'; font-size: 35px; color: white;
         border-bottom: 3px solid #cc0000; margin-bottom: 20px; padding-bottom: 5px;
-        text-shadow: 2px 2px 4px #000;
     }}
 
     .stDataFrame {{ background-color: rgba(0,0,0,0.6) !important; }}
-    
-    /* Estilo para fotos en Galería */
-    .gallery-container {{
-        background: rgba(0,0,0,0.4);
-        border-radius: 15px;
-        padding: 10px;
-        text-align: center;
-        border: 1px solid rgba(255,255,255,0.1);
-    }}
-
     .highlight-gold {{ border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important; }}
 </style>
 """, unsafe_allow_html=True)
@@ -129,7 +111,6 @@ except FileNotFoundError:
     datos_cargados = False
 
 if datos_cargados:
-    # Lógica de Sorteo y Puntos
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -149,7 +130,7 @@ if datos_cargados:
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
-    # --- 6. VISUALIZACIÓN EN PESTAÑAS ---
+    # --- 6. VISUALIZACIÓN ---
     tab1, tab2, tab_mundial, tab_conf, tab_galeria = st.tabs([
         "📢 SORTEO", 
         "⚔️ GRUPOS", 
@@ -215,12 +196,16 @@ if datos_cargados:
                     draw_card(row['Equipo'], row['Capitan'], val, "Pedidos/Día", estilo)
 
     with tab_galeria:
-        st.markdown("## 🖼️ Galería de Capitanes")
-        st.write("Selecciona una pestaña de grupo para ver a los líderes:")
+        st.markdown("## 🖼️ Galería de Equipos")
         
-        # Sub-tabs para no cargar las 12 imágenes pesadas de golpe
+        # Diccionario de excepciones (Nombre Archivo -> Nombre Equipo en Excel)
+        excepciones = {
+            "Natalia García": "Equipo Cartera Propia",
+            "Andrés Viera": "Equipo K3",
+            "Álvaro Guerra": "Equipo Madera"
+        }
+        
         g_tabs = st.tabs(["Grupo A", "Grupo B", "Grupo C", "Grupo D"])
-        
         for i, g_label in enumerate(grupos_labels):
             with g_tabs[i]:
                 df_g = df[df['Grupo'] == g_label].sort_values('Equipo')
@@ -228,18 +213,33 @@ if datos_cargados:
                 
                 for idx, row in df_g.reset_index().iterrows():
                     with cols_gal[idx % 3]:
+                        nombre_equipo = row['Equipo']
                         nombre_cap = str(row['Capitan']).strip()
-                        st.markdown(f"**{row['Equipo']}**")
-                        st.caption(f"Capitán: {nombre_cap}")
                         
-                        # Buscador de imagen (jpg o png)
+                        # 1. Determinamos qué nombre de archivo buscar
+                        archivo_a_buscar = nombre_cap # Por defecto el nombre del capitán
+                        
+                        # Buscamos si este equipo está en las excepciones
+                        for arch, eq in excepciones.items():
+                            if eq.lower() == nombre_equipo.lower():
+                                archivo_a_buscar = arch
+                                break
+                        
+                        # 2. Buscador de imagen
                         img_path = None
                         for ext in [".jpg", ".jpeg", ".png", ".JPG"]:
-                            if os.path.exists(f"{nombre_cap}{ext}"):
-                                img_path = f"{nombre_cap}{ext}"
+                            if os.path.exists(f"{archivo_a_buscar}{ext}"):
+                                img_path = f"{archivo_a_buscar}{ext}"
                                 break
+                        
+                        st.markdown(f"""
+                        <div class="fifa-card">
+                            <div class="card-subtitle">{nombre_equipo}</div>
+                            <div class="card-title" style="font-size:20px;">{nombre_cap}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                         
                         if img_path:
                             st.image(img_path, use_container_width=True)
                         else:
-                            st.warning(f"No se encontró foto para {nombre_cap}")
+                            st.warning(f"Foto no encontrada: {archivo_a_buscar}")
