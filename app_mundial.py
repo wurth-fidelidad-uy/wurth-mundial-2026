@@ -253,14 +253,21 @@ if datos_cargados:
             st.dataframe(df_show, hide_index=True, use_container_width=True)
 
     with tab_externo:
-        st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
-        st.markdown("## ⚽ EQUIPOS Y FORMACIONES")
-        st.markdown("#### Haz clic a continuación para ver el diseño gráfico de los equipos")
-        
-        # Enlace externo estilizado como botón
-        st.markdown(f"""
-            <a href="http://www.wurth.com.uy" target="_blank" class="external-link-btn">
-                VER LA TARJETA DE CADA EQUIPO 🔗
-            </a>
+        st.markdown("""
+            <div style='
+                text-align: center; 
+                margin-top: 50px; 
+                background-color: rgba(255, 255, 255, 0.95); 
+                padding: 60px; 
+                border-radius: 20px; 
+                border: 2px solid #cc0000;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            '>
+                <h2 style='color: #000000 !important; font-family: "WuerthExtra"; margin-bottom: 30px;'>
+                    ⚽ EQUIPOS Y FORMACIONES
+                </h2>
+                <a href="http://www.wurth.com.uy" target="_blank" class="external-link-btn" style="text-decoration: none;">
+                    VER LA TARJETA DE CADA EQUIPO 🔗
+                </a>
+            </div>
         """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
