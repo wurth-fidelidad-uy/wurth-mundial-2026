@@ -50,7 +50,7 @@ st.markdown(f"""
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
-        padding: 15px; /* Un poco menos padding para que quepa todo */
+        padding: 15px;
         text-align: center;
         box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
@@ -89,6 +89,7 @@ st.markdown(f"""
         text-shadow: 2px 2px 4px #000;
     }}
 
+    /* Fondo transparente para tablas */
     .stDataFrame {{ background-color: rgba(0,0,0,0.6) !important; }}
 </style>
 """, unsafe_allow_html=True)
@@ -99,11 +100,9 @@ def format_score(val):
     if isinstance(val, float) and val.is_integer(): return int(val)
     return val
 
-# Modificamos la función para aceptar PJ y Total Fechas
 def draw_card(equipo, capitan, score_raw, label_score, pj_actual=None, total_fechas=None, border_class=""):
     score_display = format_score(score_raw)
     
-    # HTML condicional: Si pasamos datos de PJ, los mostramos
     html_pj = ""
     if pj_actual is not None:
         html_pj = f"""<div class="pj-badge">PJ: {pj_actual} / {total_fechas}</div>"""
@@ -124,13 +123,25 @@ def draw_card(equipo, capitan, score_raw, label_score, pj_actual=None, total_fec
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-# --- 4. HEADER ---
+# --- 4. HEADER INTELIGENTE (Buscador de Logo) ---
 c1, c2 = st.columns([1.5, 6])
+
+# BÚSQUEDA AUTOMÁTICA DEL LOGO
+logo_encontrado = None
+archivos_carpeta = os.listdir(".") # Lista todos los archivos
+for archivo in archivos_carpeta:
+    # Busca cualquier archivo que diga "logo" (mayus/minus) y sea png/jpg
+    if "logo" in archivo.lower() and (archivo.endswith(".png") or archivo.endswith(".jpg") or archivo.endswith(".jpeg")):
+        logo_encontrado = archivo
+        break
+
 with c1:
-    if os.path.exists("logo_wurth.png"):
-        st.image("logo_wurth.png", use_container_width=True)
+    if logo_encontrado:
+        st.image(logo_encontrado, use_container_width=True)
     else:
+        # Si falla, muestra trofeo y avisa qué archivos ve (para depurar)
         st.markdown("<div style='font-size: 80px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
+        # st.caption(f"Archivos: {archivos_carpeta}") # Descomenta esto si necesitas ver qué archivos hay
 
 with c2:
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
@@ -147,16 +158,15 @@ except FileNotFoundError:
     datos_cargados = False
 
 if datos_cargados:
-    # --- CALCULO AUTOMÁTICO DE FECHAS JUGADAS ---
+    # CALCULO PJ
     cols_juego = ['F2_Workout_Week_Score', 'F2_Sales_Battle_2_Score', 'F2_Customer_Month_Score', 'F2_Clientes_Compradores_Score']
-    total_fechas = len(cols_juego) # Son 4 competencias
-    # Contamos cuántas columnas tienen al menos un valor mayor a 0 (significa que ya se jugó)
+    total_fechas = len(cols_juego)
     fechas_jugadas = 0
     for col in cols_juego:
         if df[col].max() > 0:
             fechas_jugadas += 1
 
-    # --- LÓGICA DE CLASIFICACIÓN ---
+    # CLASIFICACIÓN
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -187,7 +197,7 @@ if datos_cargados:
         altura_tabla = (len(df_display) + 1) * 38 
         st.dataframe(df_display, hide_index=True, use_container_width=True, height=altura_tabla)
 
-    # --- PESTAÑA 2 (CON PJ AGREGADO) ---
+    # --- PESTAÑA 2 ---
     with tab2:
         st.markdown("### ⚔️ Fase de Grupos")
         st.markdown("<br>", unsafe_allow_html=True)
@@ -198,14 +208,13 @@ if datos_cargados:
                 df_grupo = df[df['Grupo'] == grupo]
                 for _, row in df_grupo.iterrows():
                     estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
-                    # AQUI PASAMOS EL DATO DE PJ Y TOTAL FECHAS
                     draw_card(
                         equipo=row['Equipo'], 
                         capitan=row['Capitan'], 
                         score_raw=row['Puntos_Fase2'], 
                         label_score="Puntos Totales",
-                        pj_actual=fechas_jugadas,    # <--- Dato nuevo
-                        total_fechas=total_fechas,   # <--- Dato nuevo
+                        pj_actual=fechas_jugadas,
+                        total_fechas=total_fechas,
                         border_class=estilo
                     )
 
