@@ -252,22 +252,34 @@ if datos_cargados:
             df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
             st.dataframe(df_show, hide_index=True, use_container_width=True)
 
-    with tab_externo:
-        st.markdown("""
-            <div style='
-                text-align: center; 
-                margin-top: 50px; 
-                background-color: rgba(255, 255, 255, 0.95); 
-                padding: 60px; 
-                border-radius: 20px; 
-                border: 2px solid #cc0000;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            '>
-                <h2 style='color: #000000 !important; font-family: "WuerthExtra"; margin-bottom: 30px;'>
+  with tab_externo:
+        st.markdown(f"""
+            <div style='text-align: center; margin-top: 80px;'>
+                <h2 style='
+                    color: white !important; 
+                    font-family: "WuerthExtra"; 
+                    font-size: 45px; 
+                    text-shadow: 2px 4px 8px rgba(0,0,0,0.8);
+                    margin-bottom: 40px;
+                '>
                     ⚽ EQUIPOS Y FORMACIONES
                 </h2>
-                <a href="http://www.wurth.com.uy" target="_blank" class="external-link-btn" style="text-decoration: none;">
-                    VER LA TARJETA DE CADA EQUIPO 🔗
+                
+                <a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;">
+                    <div style='
+                        display: inline-block;
+                        padding: 22px 50px;
+                        background-color: #cc0000;
+                        color: white !important;
+                        border-radius: 50px;
+                        font-family: "WuerthExtra";
+                        font-size: 24px;
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+                        border: 2px solid white;
+                        transition: 0.3s;
+                    '>
+                        VER LA TARJETA DE CADA EQUIPO <span style="margin-left:10px;">🔗</span>
+                    </div>
                 </a>
             </div>
         """, unsafe_allow_html=True)
