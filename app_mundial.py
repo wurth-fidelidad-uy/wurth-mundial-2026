@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import base64
 
 # --- 1. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon="🏆")
@@ -55,32 +56,42 @@ st.markdown(f"""
         box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
         transition: transform 0.2s;
+        position: relative; /* Para posicionar elementos */
     }}
     .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
 
-    .card-title {{ 
-        font-family: 'WuerthExtra'; font-size: 24px; text-transform: uppercase; color: #fff !important; margin-bottom: 2px; line-height: 1.1;
+    /* FOTO DEL CAPITÁN */
+    .captain-img {{
+        width: 100px;
+        height: 100px;
+        border-radius: 50%; /* Círculo perfecto */
+        object-fit: cover; /* Ajustar imagen sin estirar */
+        border: 3px solid #cc0000; /* Borde rojo Würth */
+        margin-bottom: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     }}
+
+    .card-title {{ 
+        font-family: 'WuerthExtra'; font-size: 22px; text-transform: uppercase; color: #fff !important; margin-bottom: 2px; line-height: 1.1;
+    }}
+    
+    /* ESTILO PJ (Partidos Jugados) - FUERA DEL CUADRO */
+    .pj-text {{
+        font-family: 'WuerthBold';
+        font-size: 12px;
+        color: #aaa !important; /* Gris claro */
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+
     .card-subtitle {{ 
-        font-family: 'WuerthBold'; font-size: 14px; color: #ddd !important; margin-bottom: 10px; 
+        font-family: 'WuerthBold'; font-size: 15px; color: #fff !important; margin-bottom: 10px; 
     }}
     
     /* Caja de Estadísticas */
     .stat-box {{ 
-        background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px; margin-top: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
-    }}
-    
-    /* Estilo para PJ (Partidos Jugados) */
-    .pj-badge {{
-        background-color: #333;
-        color: #aaa;
-        font-size: 12px;
-        font-family: 'WuerthBold';
-        padding: 2px 8px;
-        border-radius: 10px;
-        display: inline-block;
-        margin-bottom: 5px;
-        border: 1px solid #555;
+        background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px; margin-top: 5px; border: 1px solid rgba(255, 255, 255, 0.1);
     }}
     
     .group-header {{
@@ -95,27 +106,56 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- 3. FUNCIONES AUXILIARES ---
+
 def format_score(val):
     if pd.isna(val) or val == "": return "-"
     if isinstance(val, float) and val.is_integer(): return int(val)
     return val
 
+def get_image_base64(path):
+    """Convierte una imagen local a base64 para que HTML la pueda leer."""
+    try:
+        with open(path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        return f"data:image/png;base64,{encoded_string}"
+    except Exception:
+        return None
+
 def draw_card(equipo, capitan, score_raw, label_score, pj_actual=None, total_fechas=None, border_class=""):
     score_display = format_score(score_raw)
     
+    # 1. BUSCAR IMAGEN DEL CAPITÁN
+    # Busca un archivo que se llame igual que el capitán (ej: "Juan Perez.jpg")
+    img_src = None
+    extensions = [".png", ".jpg", ".jpeg", ".webp"]
+    
+    if isinstance(capitan, str): # Aseguramos que capitan sea texto
+        for ext in extensions:
+            possible_file = f"{capitan.strip()}{ext}"
+            if os.path.exists(possible_file):
+                img_src = get_image_base64(possible_file)
+                break
+    
+    # Si no encuentra foto, usa una silueta genérica
+    if img_src is None:
+        # Silueta SVG en base64
+        img_src = "https://cdn-icons-png.flaticon.com/512/3237/3237472.png" 
+
+    # 2. TEXTO PJ
     html_pj = ""
     if pj_actual is not None:
-        html_pj = f"""<div class="pj-badge">PJ: {pj_actual} / {total_fechas}</div>"""
+        html_pj = f"""<div class="pj-text">PJ: {pj_actual} / {total_fechas}</div>"""
 
+    # 3. CONSTRUCCIÓN HTML
     card_html = f"""
     <div class="fifa-card {border_class}">
-        <div style="font-size: 45px; margin-bottom: 5px;">👕</div>
+        <img src="{img_src}" class="captain-img">
+        
         <div class="card-title">{equipo}</div>
+        {html_pj}
         <div class="card-subtitle">{capitan}</div>
         
         <div class="stat-box">
-            {html_pj}
-            <br>
             <span style="color: #eee; font-family: 'WuerthBook'; font-size: 13px;">{label_score}</span><br>
             <strong style="color: #fff; font-size: 26px; font-family: 'WuerthBold';">{score_display}</strong>
         </div>
@@ -123,15 +163,11 @@ def draw_card(equipo, capitan, score_raw, label_score, pj_actual=None, total_fec
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-# --- 4. HEADER INTELIGENTE (Buscador de Logo) ---
+# --- 4. HEADER INTELIGENTE ---
 c1, c2 = st.columns([1.5, 6])
-
-# BÚSQUEDA AUTOMÁTICA DEL LOGO
 logo_encontrado = None
-archivos_carpeta = os.listdir(".") # Lista todos los archivos
-for archivo in archivos_carpeta:
-    # Busca cualquier archivo que diga "logo" (mayus/minus) y sea png/jpg
-    if "logo" in archivo.lower() and (archivo.endswith(".png") or archivo.endswith(".jpg") or archivo.endswith(".jpeg")):
+for archivo in os.listdir("."):
+    if "logo" in archivo.lower() and (archivo.endswith(".png") or archivo.endswith(".jpg")):
         logo_encontrado = archivo
         break
 
@@ -139,9 +175,7 @@ with c1:
     if logo_encontrado:
         st.image(logo_encontrado, use_container_width=True)
     else:
-        # Si falla, muestra trofeo y avisa qué archivos ve (para depurar)
         st.markdown("<div style='font-size: 80px; text-align: center;'>🏆</div>", unsafe_allow_html=True)
-        # st.caption(f"Archivos: {archivos_carpeta}") # Descomenta esto si necesitas ver qué archivos hay
 
 with c2:
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
