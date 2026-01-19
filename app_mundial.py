@@ -252,7 +252,7 @@ if datos_cargados:
             df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
             st.dataframe(df_show, hide_index=True, use_container_width=True)
 
-  with tab_externo:
+ with tab_externo:
         st.markdown(f"""
             <div style='text-align: center; margin-top: 80px;'>
                 <h2 style='
@@ -260,7 +260,7 @@ if datos_cargados:
                     font-family: "WuerthExtra"; 
                     font-size: 45px; 
                     text-shadow: 2px 4px 8px rgba(0,0,0,0.8);
-                    margin-bottom: 40px;
+                    margin-bottom: 50px;
                 '>
                     ⚽ EQUIPOS Y FORMACIONES
                 </h2>
@@ -268,17 +268,21 @@ if datos_cargados:
                 <a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;">
                     <div style='
                         display: inline-block;
-                        padding: 22px 50px;
+                        padding: 22px 55px;
                         background-color: #cc0000;
-                        color: white !important;
                         border-radius: 50px;
-                        font-family: "WuerthExtra";
-                        font-size: 24px;
-                        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
                         border: 2px solid white;
-                        transition: 0.3s;
+                        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                        transition: transform 0.3s ease;
                     '>
-                        VER LA TARJETA DE CADA EQUIPO <span style="margin-left:10px;">🔗</span>
+                        <span style='
+                            color: white !important; 
+                            font-family: "WuerthExtra"; 
+                            font-size: 24px;
+                            text-decoration: none !important;
+                        '>
+                            VER LA TARJETA DE CADA EQUIPO <span style="margin-left:12px;">🔗</span>
+                        </span>
                     </div>
                 </a>
             </div>
