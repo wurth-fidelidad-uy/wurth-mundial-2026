@@ -74,7 +74,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- 2. FUNCIONES AUXILIARES ---
-
 def format_score(val):
     if pd.isna(val) or val == "": return "-"
     if isinstance(val, float) and val.is_integer(): return int(val)
@@ -118,12 +117,10 @@ except FileNotFoundError:
     datos_cargados = False
 
 if datos_cargados:
-    # Procesamiento y Sorteo
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
-    # Cálculo de Puntos
     df['Puntos_Fase2'] = 0
     reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
     for grupo in grupos_labels:
@@ -135,7 +132,6 @@ if datos_cargados:
                 ganadores = df_g[df_g[kpi] == max_val].index
                 df.loc[ganadores, 'Puntos_Fase2'] += pts
 
-    # Definición de Clasificados
     df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
@@ -211,33 +207,32 @@ if datos_cargados:
 
     with tab_externo:
         st.markdown(f"""
-            <div style='text-align: center; margin-top: 80px;'>
+            <div style='text-align: center; margin-top: 100px;'>
                 <h2 style='
                     color: white !important; 
                     font-family: "WuerthExtra"; 
                     font-size: 45px; 
-                    text-shadow: 2px 4px 8px rgba(0,0,0,0.8);
+                    text-shadow: 2px 4px 10px rgba(0,0,0,0.9);
                     margin-bottom: 50px;
                 '>
                     ⚽ EQUIPOS Y FORMACIONES
                 </h2>
-                
                 <a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;">
                     <div style='
                         display: inline-block;
-                        padding: 22px 55px;
+                        padding: 24px 60px;
                         background-color: #cc0000;
                         border-radius: 50px;
                         border: 2px solid white;
-                        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
                     '>
                         <span style='
                             color: white !important; 
                             font-family: "WuerthExtra"; 
-                            font-size: 24px;
+                            font-size: 26px;
                             text-decoration: none !important;
                         '>
-                            VER LA TARJETA DE CADA EQUIPO <span style="margin-left:12px;">🔗</span>
+                            VER LA TARJETA DE CADA EQUIPO <span style="margin-left:15px;">🔗</span>
                         </span>
                     </div>
                 </a>
