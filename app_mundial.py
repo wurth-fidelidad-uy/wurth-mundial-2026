@@ -50,7 +50,7 @@ st.markdown(f"""
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
-        padding: 20px;
+        padding: 15px; /* Un poco menos padding para que quepa todo */
         text-align: center;
         box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         margin-bottom: 25px;
@@ -59,13 +59,28 @@ st.markdown(f"""
     .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
 
     .card-title {{ 
-        font-family: 'WuerthExtra'; font-size: 26px; text-transform: uppercase; color: #fff !important; margin-bottom: 5px; 
+        font-family: 'WuerthExtra'; font-size: 24px; text-transform: uppercase; color: #fff !important; margin-bottom: 2px; line-height: 1.1;
     }}
     .card-subtitle {{ 
-        font-family: 'WuerthBold'; font-size: 16px; color: #ddd !important; margin-bottom: 15px; 
+        font-family: 'WuerthBold'; font-size: 14px; color: #ddd !important; margin-bottom: 10px; 
     }}
+    
+    /* Caja de Estadísticas */
     .stat-box {{ 
-        background-color: rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 10px; margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 8px; margin-top: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+    }}
+    
+    /* Estilo para PJ (Partidos Jugados) */
+    .pj-badge {{
+        background-color: #333;
+        color: #aaa;
+        font-size: 12px;
+        font-family: 'WuerthBold';
+        padding: 2px 8px;
+        border-radius: 10px;
+        display: inline-block;
+        margin-bottom: 5px;
+        border: 1px solid #555;
     }}
     
     .group-header {{
@@ -74,7 +89,6 @@ st.markdown(f"""
         text-shadow: 2px 2px 4px #000;
     }}
 
-    /* Estilos de tabla transparente y sin bordes feos */
     .stDataFrame {{ background-color: rgba(0,0,0,0.6) !important; }}
 </style>
 """, unsafe_allow_html=True)
@@ -85,16 +99,26 @@ def format_score(val):
     if isinstance(val, float) and val.is_integer(): return int(val)
     return val
 
-def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
+# Modificamos la función para aceptar PJ y Total Fechas
+def draw_card(equipo, capitan, score_raw, label_score, pj_actual=None, total_fechas=None, border_class=""):
     score_display = format_score(score_raw)
+    
+    # HTML condicional: Si pasamos datos de PJ, los mostramos
+    html_pj = ""
+    if pj_actual is not None:
+        html_pj = f"""<div class="pj-badge">PJ: {pj_actual} / {total_fechas}</div>"""
+
     card_html = f"""
     <div class="fifa-card {border_class}">
-        <div style="font-size: 50px; margin-bottom: 10px;">👕</div>
+        <div style="font-size: 45px; margin-bottom: 5px;">👕</div>
         <div class="card-title">{equipo}</div>
         <div class="card-subtitle">{capitan}</div>
+        
         <div class="stat-box">
-            <span style="color: #eee; font-family: 'WuerthBook'; font-size: 14px;">{label_score}</span><br>
-            <strong style="color: #fff; font-size: 24px; font-family: 'WuerthBold';">{score_display}</strong>
+            {html_pj}
+            <br>
+            <span style="color: #eee; font-family: 'WuerthBook'; font-size: 13px;">{label_score}</span><br>
+            <strong style="color: #fff; font-size: 26px; font-family: 'WuerthBold';">{score_display}</strong>
         </div>
     </div>
     """
@@ -123,7 +147,16 @@ except FileNotFoundError:
     datos_cargados = False
 
 if datos_cargados:
-    # Lógica de clasificación (Igual que siempre)
+    # --- CALCULO AUTOMÁTICO DE FECHAS JUGADAS ---
+    cols_juego = ['F2_Workout_Week_Score', 'F2_Sales_Battle_2_Score', 'F2_Customer_Month_Score', 'F2_Clientes_Compradores_Score']
+    total_fechas = len(cols_juego) # Son 4 competencias
+    # Contamos cuántas columnas tienen al menos un valor mayor a 0 (significa que ya se jugó)
+    fechas_jugadas = 0
+    for col in cols_juego:
+        if df[col].max() > 0:
+            fechas_jugadas += 1
+
+    # --- LÓGICA DE CLASIFICACIÓN ---
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -149,27 +182,12 @@ if datos_cargados:
     # --- PESTAÑA 1 ---
     with tab1:
         st.markdown("### 📊 Ranking Inicial")
-        # 1. Seleccionamos columnas
         df_display = df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo')
-        
-        # 2. RENOMBRAMOS PARA MOSTRAR "COMERCIAL"
-        df_display = df_display.rename(columns={
-            'F1_Venta_23_Ene_Porcentaje': 'Resultado Final',
-            'Capitan': 'Capitán'
-        })
-        
-        # 3. CÁLCULO DE ALTURA PARA EVITAR SCROLL
-        # (Filas + 1 cabecera) * 35 pixeles por fila (aprox)
+        df_display = df_display.rename(columns={'F1_Venta_23_Ene_Porcentaje': 'Resultado Final', 'Capitan': 'Capitán'})
         altura_tabla = (len(df_display) + 1) * 38 
-        
-        st.dataframe(
-            df_display, 
-            hide_index=True, 
-            use_container_width=True, 
-            height=altura_tabla  # <--- AQUÍ ESTÁ EL TRUCO
-        )
+        st.dataframe(df_display, hide_index=True, use_container_width=True, height=altura_tabla)
 
-    # --- PESTAÑA 2 ---
+    # --- PESTAÑA 2 (CON PJ AGREGADO) ---
     with tab2:
         st.markdown("### ⚔️ Fase de Grupos")
         st.markdown("<br>", unsafe_allow_html=True)
@@ -180,8 +198,16 @@ if datos_cargados:
                 df_grupo = df[df['Grupo'] == grupo]
                 for _, row in df_grupo.iterrows():
                     estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
-                    # Aquí cambiamos la etiqueta de la tarjeta manualmente
-                    draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
+                    # AQUI PASAMOS EL DATO DE PJ Y TOTAL FECHAS
+                    draw_card(
+                        equipo=row['Equipo'], 
+                        capitan=row['Capitan'], 
+                        score_raw=row['Puntos_Fase2'], 
+                        label_score="Puntos Totales",
+                        pj_actual=fechas_jugadas,    # <--- Dato nuevo
+                        total_fechas=total_fechas,   # <--- Dato nuevo
+                        border_class=estilo
+                    )
 
     # --- PESTAÑA 3 ---
     with tab_mundial:
@@ -204,16 +230,8 @@ if datos_cargados:
             with c2:
                 st.write("Tabla de Posiciones:")
                 df_show = df_mundial[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
-                
-                # RENOMBRAR COMERCIAL
-                df_show = df_show.rename(columns={
-                    'F3_Pedidos_Por_Dia': 'Pedidos por Día',
-                    'Capitan': 'Capitán'
-                })
-                
+                df_show = df_show.rename(columns={'F3_Pedidos_Por_Dia': 'Pedidos por Día', 'Capitan': 'Capitán'})
                 df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
-                
-                # ALTURA SIN SCROLL
                 altura_mundial = (len(df_show) + 1) * 38
                 st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_mundial)
 
@@ -237,15 +255,7 @@ if datos_cargados:
             st.divider()
             st.write("Tabla General:")
             df_show = df_conf[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']].copy()
-            
-            # RENOMBRAR COMERCIAL
-            df_show = df_show.rename(columns={
-                'F3_Pedidos_Por_Dia': 'Pedidos por Día',
-                'Capitan': 'Capitán'
-            })
-            
+            df_show = df_show.rename(columns={'F3_Pedidos_Por_Dia': 'Pedidos por Día', 'Capitan': 'Capitán'})
             df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
-            
-            # ALTURA SIN SCROLL
             altura_conf = (len(df_show) + 1) * 38
             st.dataframe(df_show, hide_index=True, use_container_width=True, height=altura_conf)
