@@ -8,7 +8,7 @@ st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon=
 # ⬇️ DATOS DE TU REPOSITORIO (¡EDITAR ESTO!) ⬇️
 # ==============================================================================
 # Escribe aquí tu usuario de GitHub y el nombre exacto de tu repositorio
-USUARIO_GITHUB = "TU_USUARIO_AQUI"  # Ej: "juanperez"
+USUARIO_GITHUB = "wurth-fidelidad-uy"  # Ej: "juanperez"
 NOMBRE_REPO = "wurth-mundial-2026"  # Ej: "wurth-mundial-2026"
 RAMA = "main" # Generalmente es 'main' o 'master'
 
