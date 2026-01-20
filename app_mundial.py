@@ -35,46 +35,30 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Estilo de las Imágenes de Supervisor (Tamaño Icono Violeta) */
     .supervisor-img {{
-        width: 85px;
-        height: 85px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid #cc0000;
-        margin-bottom: 10px;
+        width: 85px; height: 85px;
+        object-fit: cover; border-radius: 50%;
+        border: 3px solid #cc0000; margin-bottom: 10px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }}
 
     .default-avatar {{
-        font-size: 50px;
-        background: #6f42c1; /* Violeta Institucional */
-        width: 85px;
-        height: 85px;
-        line-height: 85px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-bottom: 10px;
-        text-align: center;
+        font-size: 50px; background: #6f42c1;
+        width: 85px; height: 85px; line-height: 85px;
+        border-radius: 50%; display: inline-block;
+        margin-bottom: 10px; text-align: center;
     }}
 
     .media-container {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 10px;
+        display: flex; justify-content: center; align-items: center; margin-bottom: 10px;
     }}
 
-    /* Tarjetas de Resultados */
     .fifa-card {{
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 16px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        margin-bottom: 25px;
-        transition: transform 0.2s;
+        border-radius: 16px; padding: 20px;
+        text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        margin-bottom: 25px; transition: transform 0.2s;
     }}
     .fifa-card:hover {{ transform: scale(1.02); border-color: #cc0000; }}
 
@@ -87,10 +71,16 @@ st.markdown(f"""
         border-bottom: 3px solid #cc0000; margin-bottom: 20px;
     }}
 
-    /* Clases de Resaltado para Medallas */
     .highlight-gold {{ border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important; }}
     .highlight-silver {{ border-color: #C0C0C0 !important; box-shadow: 0 0 15px rgba(192, 192, 192, 0.3) !important; }}
     .highlight-bronze {{ border-color: #CD7F32 !important; box-shadow: 0 0 15px rgba(205, 127, 50, 0.3) !important; }}
+
+    .wait-message {{
+        background: rgba(204, 0, 0, 0.2);
+        border: 1px solid #cc0000;
+        padding: 40px; border-radius: 20px;
+        text-align: center; margin-top: 50px;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,8 +89,7 @@ def get_image_base64(path):
     try:
         with open(path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
-    except:
-        return None
+    except: return None
 
 def format_score(val):
     if pd.isna(val) or val == "": return "-"
@@ -111,8 +100,6 @@ def format_score(val):
 
 def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
     score_display = format_score(score_raw)
-    
-    # Búsqueda automática de imagen
     img_base64 = None
     for ext in [".png", ".jpeg", ".jpg"]:
         path = f"{equipo}{ext}"
@@ -120,10 +107,7 @@ def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
             img_base64 = get_image_base64(path)
             break
     
-    if img_base64:
-        media_html = f'<img src="data:image/png;base64,{img_base64}" class="supervisor-img">'
-    else:
-        media_html = '<div class="default-avatar">👤</div>'
+    media_html = f'<img src="data:image/png;base64,{img_base64}" class="supervisor-img">' if img_base64 else '<div class="default-avatar">👤</div>'
 
     st.markdown(f"""
     <div class="fifa-card {border_class}">
@@ -140,11 +124,8 @@ def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
 # --- 3. HEADER ---
 c1, c2 = st.columns([1.5, 6])
 with c1:
-    if os.path.exists("logo_wurth.png"):
-        st.image("logo_wurth.png", use_container_width=True)
-    else:
-        st.markdown("<div style='font-size: 80px;'>🏆</div>", unsafe_allow_html=True)
-
+    if os.path.exists("logo_wurth.png"): st.image("logo_wurth.png", use_container_width=True)
+    else: st.markdown("<div style='font-size: 80px;'>🏆</div>", unsafe_allow_html=True)
 with c2:
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     st.title("WÜRTH WORLD CUP 2026")
@@ -160,36 +141,32 @@ except:
     datos_cargados = False
 
 if datos_cargados:
-    # 1. Ranking inicial por ventas
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
-    # 2. Lógica de puntos (Máximo 14 puntos por grupo)
     df['Puntos_Fase2'] = 0
     reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
+    
+    grupos_cerrados = {}
     for grupo in grupos_labels:
         idx_g = df[df['Grupo'] == grupo].index
+        puntos_acumulados_grupo = 0
         for kpi, pts in reglas.items():
             max_val = df.loc[idx_g, kpi].max()
             if max_val > 0:
-                # Solo un ganador por KPI por grupo (desempate por ranking inicial)
                 ganador_idx = df.loc[idx_g][df.loc[idx_g, kpi] == max_val].index[0]
                 df.at[ganador_idx, 'Puntos_Fase2'] += pts
+                puntos_acumulados_grupo += pts
+        grupos_cerrados[grupo] = (puntos_acumulados_grupo == 14)
 
-    # 3. Clasificación Final
     df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
-    # --- 5. VISUALIZACIÓN EN PESTAÑAS ---
     tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
-        "📊 CLASIFICACIÓN A GRUPOS", 
-        "⚔️ GRUPOS", 
-        "🏆 MUNDIAL", 
-        "🥈 CONFEDERACIONES", 
-        "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA",
-        "🖼️ EQUIPOS"
+        "📊 CLASIFICACIÓN A GRUPOS", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES", 
+        "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA", "🖼️ EQUIPOS"
     ])
     
     with tab1:
@@ -197,64 +174,56 @@ if datos_cargados:
         st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
     with tab2:
-        cols = st.columns(4)
-        for i, g in enumerate(grupos_labels):
-            with cols[i]:
-                st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
-                df_g = df[df['Grupo'] == g]
-                for _, row in df_g.iterrows():
-                    estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
-                    draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
+        if all(grupos_cerrados.values()):
+            cols = st.columns(4)
+            for i, g in enumerate(grupos_labels):
+                with cols[i]:
+                    st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
+                    df_g = df[df['Grupo'] == g]
+                    for _, row in df_g.iterrows():
+                        estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
+                        draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
+        else:
+            st.markdown("<div class='wait-message'><h3>⏳ FASE DE GRUPOS EN DISPUTA</h3><p>Los resultados se mostrarán cuando se completen todos los puntos de la fase anterior (14 puntos por grupo).</p></div>", unsafe_allow_html=True)
 
     with tab_mundial:
-        st.markdown("## 🌍 FINAL COPA DEL MUNDO")
-        df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-        if not df_m.empty:
-            best = df_m.iloc[0]
-            val = best['F3_Pedidos_Por_Dia']
-            hay_v = pd.notna(val) and val > 0
-            c1, c2 = st.columns([1, 2])
-            with c1:
-                if hay_v: st.balloons()
-                draw_card(best['Equipo'], best['Capitan'], val, "Pedidos/Día", "highlight-gold" if hay_v else "")
-            with c2: st.dataframe(df_m[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
+        if all(grupos_cerrados.values()):
+            st.markdown("## 🌍 FINAL COPA DEL MUNDO")
+            df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
+            if not df_m.empty:
+                best = df_m.iloc[0]; val = best['F3_Pedidos_Por_Dia']; hay_v = pd.notna(val) and val > 0
+                c1, c2 = st.columns([1, 2])
+                with c1:
+                    if hay_v: st.balloons()
+                    draw_card(best['Equipo'], best['Capitan'], val, "Pedidos/Día", "highlight-gold" if hay_v else "")
+                with c2: st.dataframe(df_m[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
+        else:
+            st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN AL MUNDIAL</h3><p>Aún no se han definido los clasificados.</p></div>", unsafe_allow_html=True)
 
     with tab_conf:
-        st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
-        df_c = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-        if not df_c.empty:
-            c1, c2, c3 = st.columns(3)
-            meds = ["🥇 Oro", "🥈 Plata", "🥉 Bronce"]
-            clss = ["highlight-gold", "highlight-silver", "highlight-bronze"]
-            for i in range(min(3, len(df_c))):
-                row = df_c.iloc[i]
-                val = row['F3_Pedidos_Por_Dia']
-                with [c1, c2, c3][i]:
-                    st.markdown(f"<h4 style='text-align:center'>{meds[i]}</h4>", unsafe_allow_html=True)
-                    draw_card(row['Equipo'], row['Capitan'], val, "Pedidos/Día", clss[i] if (pd.notna(val) and val > 0) else "")
-            st.divider()
-            st.dataframe(df_c[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
+        if all(grupos_cerrados.values()):
+            st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
+            df_c = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
+            if not df_c.empty:
+                c1, c2, c3 = st.columns(3); meds = ["🥇 Oro", "🥈 Plata", "🥉 Bronce"]; clss = ["highlight-gold", "highlight-silver", "highlight-bronze"]
+                for i in range(min(3, len(df_c))):
+                    row = df_c.iloc[i]; val = row['F3_Pedidos_Por_Dia']
+                    with [c1, c2, c3][i]:
+                        st.markdown(f"<h4 style='text-align:center'>{meds[i]}</h4>", unsafe_allow_html=True)
+                        draw_card(row['Equipo'], row['Capitan'], val, "Pedidos/Día", clss[i] if (pd.notna(val) and val > 0) else "")
+                st.divider()
+                st.dataframe(df_c[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
+        else:
+            st.markdown("<div class='wait-message'><h3>🥈 CLASIFICACIÓN CONFEDERACIONES</h3><p>Aún no se han definido los clasificados.</p></div>", unsafe_allow_html=True)
 
     with tab_partidos:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
         st.markdown("## 📅 LA INFORMACIÓN SE IRÁ ACTUALIZANDO CON FOCO SOBRE LA COMPETENCIA MÁS RECIENTE")
-        st.markdown(f"""
-            <a href="https://viewer.ipaper.io/wurth-uruguay/world-cup/wurth-world-cup-2026/" target="_blank" style="text-decoration: none;">
-                <div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'>
-                    <span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER INFORMACIÓN 📊</span>
-                </div>
-            </a>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<a href="https://viewer.ipaper.io/wurth-uruguay/world-cup/wurth-world-cup-2026/" target="_blank" style="text-decoration: none;"><div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'><span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER INFORMACIÓN 📊</span></div></a>""", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with tab_externo:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
         st.markdown("## ⚽ EQUIPOS Y FORMACIONES")
-        st.markdown(f"""
-            <a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;">
-                <div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'>
-                    <span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER LA TARJETA DE CADA EQUIPO 🔗</span>
-                </div>
-            </a>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;"><div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'><span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER LA TARJETA DE CADA EQUIPO 🔗</span></div></a>""", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
