@@ -142,7 +142,7 @@ if datos_cargados:
         "⚔️ GRUPOS", 
         "🏆 MUNDIAL", 
         "🥈 CONFEDERACIONES", 
-        "📅 PARTIDOS Y PUNTOS",
+        "📅 REGLAMENTO Y PUNTOS",
         "🖼️ EQUIPOS"
     ])
     
@@ -210,7 +210,7 @@ if datos_cargados:
         st.markdown(f"""
             <div style='text-align: center; margin-top: 100px;'>
                 <h2 style='color: white !important; font-family: "WuerthExtra"; font-size: 45px; text-shadow: 2px 4px 10px rgba(0,0,0,0.9); margin-bottom: 50px;'>
-                    📅 PARTIDOS Y PUNTOS DEL CAMPEONATO
+                    📅 REGLAMENTO Y PUNTOS
                 </h2>
                 <a href="#" target="_blank" style="text-decoration: none;">
                     <div style='display: inline-block; padding: 24px 60px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.6);'>
