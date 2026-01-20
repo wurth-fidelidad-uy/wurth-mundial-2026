@@ -7,7 +7,7 @@ import base64
 st.set_page_config(page_title="Würth World Cup 2026", layout="wide", page_icon="🏆")
 
 # ==============================================================================
-# 🎨 ESTILOS CSS (DISEÑO INSTITUCIONAL + MEDALLAS + IMÁGENES CIRCULARES)
+# 🎨 ESTILOS CSS
 # ==============================================================================
 ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2070&auto=format&fit=crop"
 
@@ -158,12 +158,17 @@ if datos_cargados:
                 ganador_idx = df.loc[idx_g][df.loc[idx_g, kpi] == max_val].index[0]
                 df.at[ganador_idx, 'Puntos_Fase2'] += pts
                 puntos_acumulados_grupo += pts
+        # Se considera cerrado solo si el total es exactamente 14
         grupos_cerrados[grupo] = (puntos_acumulados_grupo == 14)
+
+    # Identificar si la fase de grupos global ha terminado
+    fase_grupos_finalizada = all(grupos_cerrados.values())
 
     df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
+    # --- 5. VISUALIZACIÓN EN PESTAÑAS ---
     tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
         "📊 CLASIFICACIÓN A GRUPOS", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES", 
         "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA", "🖼️ EQUIPOS"
@@ -174,20 +179,19 @@ if datos_cargados:
         st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
     with tab2:
-        if all(grupos_cerrados.values()):
-            cols = st.columns(4)
-            for i, g in enumerate(grupos_labels):
-                with cols[i]:
-                    st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
-                    df_g = df[df['Grupo'] == g]
-                    for _, row in df_g.iterrows():
-                        estilo = "highlight-gold" if row['Destino'] == 'Mundial' else ""
-                        draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
-        else:
-            st.markdown("<div class='wait-message'><h3>⏳ FASE DE GRUPOS EN DISPUTA</h3><p>Los resultados se mostrarán cuando se completen todos los puntos de la fase anterior (14 puntos por grupo).</p></div>", unsafe_allow_html=True)
+        # TABLA DE GRUPOS SIEMPRE VISIBLE para que sigan el progreso
+        cols = st.columns(4)
+        for i, g in enumerate(grupos_labels):
+            with cols[i]:
+                st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
+                df_g = df[df['Grupo'] == g]
+                for _, row in df_g.iterrows():
+                    # Solo resaltamos con dorado si la fase ya cerró oficialmente
+                    estilo = "highlight-gold" if (row['Destino'] == 'Mundial' and fase_grupos_finalizada) else ""
+                    draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
     with tab_mundial:
-        if all(grupos_cerrados.values()):
+        if fase_grupos_finalizada:
             st.markdown("## 🌍 FINAL COPA DEL MUNDO")
             df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
             if not df_m.empty:
@@ -198,10 +202,10 @@ if datos_cargados:
                     draw_card(best['Equipo'], best['Capitan'], val, "Pedidos/Día", "highlight-gold" if hay_v else "")
                 with c2: st.dataframe(df_m[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
         else:
-            st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN AL MUNDIAL</h3><p>Aún no se han definido los clasificados.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN AL MUNDIAL</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
     with tab_conf:
-        if all(grupos_cerrados.values()):
+        if fase_grupos_finalizada:
             st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
             df_c = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
             if not df_c.empty:
@@ -214,7 +218,7 @@ if datos_cargados:
                 st.divider()
                 st.dataframe(df_c[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
         else:
-            st.markdown("<div class='wait-message'><h3>🥈 CLASIFICACIÓN CONFEDERACIONES</h3><p>Aún no se han definido los clasificados.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='wait-message'><h3>🥈 CLASIFICACIÓN CONFEDERACIONES</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
     with tab_partidos:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
