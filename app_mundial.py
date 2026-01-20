@@ -160,12 +160,14 @@ if datos_cargados:
                 puntos_acumulados_grupo += pts
         grupos_cerrados[grupo] = (puntos_acumulados_grupo == 14)
 
+    # Identificamos si TODOS los grupos han cerrado sus 14 puntos
     fase_grupos_finalizada = all(grupos_cerrados.values())
 
     df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
+    # --- 5. VISUALIZACIÓN EN PESTAÑAS ---
     tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
         "📊 CLASIFICACIÓN A GRUPOS", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES", 
         "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA", "🖼️ EQUIPOS"
@@ -176,12 +178,14 @@ if datos_cargados:
         st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
     with tab2:
+        # SIEMPRE VISIBLE para seguimiento de puntos
         cols = st.columns(4)
         for i, g in enumerate(grupos_labels):
             with cols[i]:
                 st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
                 df_g = df[df['Grupo'] == g]
                 for _, row in df_g.iterrows():
+                    # Solo resalta en dorado cuando la fase cerro
                     estilo = "highlight-gold" if (row['Destino'] == 'Mundial' and fase_grupos_finalizada) else ""
                     draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
@@ -190,12 +194,11 @@ if datos_cargados:
             st.markdown("## 🌍 FINAL COPA DEL MUNDO")
             df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
             
-            # FILTRO DE SEGURIDAD: ¿Hay algún dato mayor a 0?
+            # Verificamos si hay algún dato cargado en F3
             hay_resultados_f3 = (df_m['F3_Pedidos_Por_Dia'] > 0).any()
             
             if hay_resultados_f3:
-                best = df_m.iloc[0]
-                val = best['F3_Pedidos_Por_Dia']
+                best = df_m.iloc[0]; val = best['F3_Pedidos_Por_Dia']
                 st.balloons()
                 c1, c2 = st.columns([1, 2])
                 with c1:
@@ -203,7 +206,7 @@ if datos_cargados:
                 with c2:
                     st.dataframe(df_m[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
             else:
-                st.markdown("<div class='wait-message'><h3>⏳ COMPETENCIA EN CURSO</h3><p>El campeón aparecerá aquí una vez que se carguen los datos de Pedidos por Día.</p></div>", unsafe_allow_html=True)
+                st.markdown("<div class='wait-message'><h3>⏳ COMPETENCIA EN CURSO</h3><p>El campeón aparecerá aquí una vez culminada la competencia de Pedidos por día.</p></div>", unsafe_allow_html=True)
         else:
             st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN AL MUNDIAL</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
@@ -224,7 +227,7 @@ if datos_cargados:
                 st.divider()
                 st.dataframe(df_c[['Equipo', 'Capitan', 'F3_Pedidos_Por_Dia']], hide_index=True, use_container_width=True)
             else:
-                st.markdown("<div class='wait-message'><h3>⏳ COMPETENCIA EN CURSO</h3><p>Los ganadores de medallas aparecerán aquí cuando se carguen los datos correspondientes.</p></div>", unsafe_allow_html=True)
+                st.markdown("<div class='wait-message'><h3>⏳ COMPETENCIA EN CURSO</h3><p>Los ganadores aparecerán aquí una vez culminada la competencia de Pedidos por día.</p></div>", unsafe_allow_html=True)
         else:
             st.markdown("<div class='wait-message'><h3>🥈 CLASIFICACIÓN CONFEDERACIONES</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
