@@ -141,12 +141,19 @@ except:
     datos_cargados = False
 
 if datos_cargados:
+    # 1. Ranking inicial por ventas
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
+    # 2. Lógica de puntos (Máximo 14 puntos por grupo)
     df['Puntos_Fase2'] = 0
-    reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
+    reglas = {
+        'F2_Workout_Week_Score': 3, 
+        'F2_Sales_Battle_2_Score': 2, 
+        'F2_Customer_Month_Score': 4, 
+        'F2_Clientes_Compradores_Score': 5
+    }
     
     grupos_cerrados = {}
     for grupo in grupos_labels:
@@ -155,15 +162,21 @@ if datos_cargados:
         for kpi, pts in reglas.items():
             max_val = df.loc[idx_g, kpi].max()
             if max_val > 0:
+                # Si hay empate en el KPI, desempatamos internamente por el ranking de ventas de la Fase 1
                 ganador_idx = df.loc[idx_g][df.loc[idx_g, kpi] == max_val].index[0]
                 df.at[ganador_idx, 'Puntos_Fase2'] += pts
                 puntos_acumulados_grupo += pts
         grupos_cerrados[grupo] = (puntos_acumulados_grupo == 14)
 
-    # Identificamos si TODOS los grupos han cerrado sus 14 puntos
     fase_grupos_finalizada = all(grupos_cerrados.values())
 
-    df = df.sort_values(by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], ascending=[True, False, False])
+    # --- AJUSTE DE LÓGICA DE DESEMPATE ---
+    # Ordenamos por Grupo, luego Puntos Fase 2 DESCENDENTE, y luego TieBreak DESCENDENTE
+    df = df.sort_values(
+        by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], 
+        ascending=[True, False, False]
+    )
+    
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
@@ -178,14 +191,12 @@ if datos_cargados:
         st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
     with tab2:
-        # SIEMPRE VISIBLE para seguimiento de puntos
         cols = st.columns(4)
         for i, g in enumerate(grupos_labels):
             with cols[i]:
                 st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
                 df_g = df[df['Grupo'] == g]
                 for _, row in df_g.iterrows():
-                    # Solo resalta en dorado cuando la fase cerro
                     estilo = "highlight-gold" if (row['Destino'] == 'Mundial' and fase_grupos_finalizada) else ""
                     draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
@@ -193,8 +204,6 @@ if datos_cargados:
         if fase_grupos_finalizada:
             st.markdown("## 🌍 FINAL COPA DEL MUNDO")
             df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-            
-            # Verificamos si hay algún dato cargado en F3
             hay_resultados_f3 = (df_m['F3_Pedidos_Por_Dia'] > 0).any()
             
             if hay_resultados_f3:
@@ -214,7 +223,6 @@ if datos_cargados:
         if fase_grupos_finalizada:
             st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
             df_c = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-            
             hay_resultados_f3_c = (df_c['F3_Pedidos_Por_Dia'] > 0).any()
             
             if hay_resultados_f3_c:
