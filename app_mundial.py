@@ -146,14 +146,9 @@ if datos_cargados:
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
-    # 2. Lógica de puntos (Máximo 14 puntos por grupo)
+    # 2. Lógica de puntos (Cálculo inicial)
     df['Puntos_Fase2'] = 0
-    reglas = {
-        'F2_Workout_Week_Score': 3, 
-        'F2_Sales_Battle_2_Score': 2, 
-        'F2_Customer_Month_Score': 4, 
-        'F2_Clientes_Compradores_Score': 5
-    }
+    reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
     
     grupos_cerrados = {}
     for grupo in grupos_labels:
@@ -162,7 +157,7 @@ if datos_cargados:
         for kpi, pts in reglas.items():
             max_val = df.loc[idx_g, kpi].max()
             if max_val > 0:
-                # Si hay empate en el KPI, desempatamos internamente por el ranking de ventas de la Fase 1
+                # Desempate en cada KPI por orden de llegada (Ventas Fase 1)
                 ganador_idx = df.loc[idx_g][df.loc[idx_g, kpi] == max_val].index[0]
                 df.at[ganador_idx, 'Puntos_Fase2'] += pts
                 puntos_acumulados_grupo += pts
@@ -170,17 +165,18 @@ if datos_cargados:
 
     fase_grupos_finalizada = all(grupos_cerrados.values())
 
-    # --- AJUSTE DE LÓGICA DE DESEMPATE ---
-    # Ordenamos por Grupo, luego Puntos Fase 2 DESCENDENTE, y luego TieBreak DESCENDENTE
+    # --- CORRECCIÓN CLAVE: RE-ORDENAR ANTES DE ASIGNAR POSICIÓN ---
+    # Esto asegura que el Equipo Génova suba si tiene más TieBreak, incluso antes de calcular quién va al Mundial
     df = df.sort_values(
         by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], 
         ascending=[True, False, False]
-    )
+    ).reset_index(drop=True)
     
+    # Ahora sí, la posición se basa en el orden ya desempatado
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
-    # --- 5. VISUALIZACIÓN EN PESTAÑAS ---
+    # --- 5. PESTAÑAS ---
     tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
         "📊 CLASIFICACIÓN A GRUPOS", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES", 
         "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA", "🖼️ EQUIPOS"
@@ -197,6 +193,7 @@ if datos_cargados:
                 st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
                 df_g = df[df['Grupo'] == g]
                 for _, row in df_g.iterrows():
+                    # Solo brilla en dorado si la fase global terminó
                     estilo = "highlight-gold" if (row['Destino'] == 'Mundial' and fase_grupos_finalizada) else ""
                     draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
