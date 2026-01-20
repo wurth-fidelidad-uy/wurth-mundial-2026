@@ -210,9 +210,9 @@ if datos_cargados:
         st.markdown(f"""
             <div style='text-align: center; margin-top: 100px;'>
                 <h2 style='color: white !important; font-family: "WuerthExtra"; font-size: 45px; text-shadow: 2px 4px 10px rgba(0,0,0,0.9); margin-bottom: 50px;'>
-                    📅 REGLAMENTO Y PUNTOS
+                    📅 INFORMACIÓN QUE IREMOS ACTUALIZANDO A MEDIDA QUE SE DESARROLLE CADA COMPETENCIA
                 </h2>
-                <a href="#" target="_blank" style="text-decoration: none;">
+                <a href="https://viewer.ipaper.io/wurth-uruguay/world-cup/wurth-world-cup-2026/?page=1" target="_blank" style="text-decoration: none;">
                     <div style='display: inline-block; padding: 24px 60px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.6);'>
                         <span style='color: white !important; font-family: "WuerthExtra"; font-size: 26px; text-decoration: none !important;'>
                             VER INFORMACIÓN <span style="margin-left:15px;">📊</span>
