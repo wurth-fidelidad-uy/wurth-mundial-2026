@@ -49,10 +49,6 @@ st.markdown(f"""
         margin-bottom: 10px; text-align: center;
     }}
 
-    .media-container {{
-        display: flex; justify-content: center; align-items: center; margin-bottom: 10px;
-    }}
-
     .fifa-card {{
         background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -146,7 +142,7 @@ if datos_cargados:
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
     
-    # 2. Lógica de puntos (Cálculo inicial)
+    # 2. Lógica de puntos
     df['Puntos_Fase2'] = 0
     reglas = {'F2_Workout_Week_Score': 3, 'F2_Sales_Battle_2_Score': 2, 'F2_Customer_Month_Score': 4, 'F2_Clientes_Compradores_Score': 5}
     
@@ -157,7 +153,6 @@ if datos_cargados:
         for kpi, pts in reglas.items():
             max_val = df.loc[idx_g, kpi].max()
             if max_val > 0:
-                # Desempate en cada KPI por orden de llegada (Ventas Fase 1)
                 ganador_idx = df.loc[idx_g][df.loc[idx_g, kpi] == max_val].index[0]
                 df.at[ganador_idx, 'Puntos_Fase2'] += pts
                 puntos_acumulados_grupo += pts
@@ -165,45 +160,44 @@ if datos_cargados:
 
     fase_grupos_finalizada = all(grupos_cerrados.values())
 
-    # --- CORRECCIÓN CLAVE: RE-ORDENAR ANTES DE ASIGNAR POSICIÓN ---
-    # Esto asegura que el Equipo Génova suba si tiene más TieBreak, incluso antes de calcular quién va al Mundial
+    # --- LÓGICA DE POSICIONAMIENTO Y DESEMPATE ---
+    # Igual que se hizo para Viera y Piñeyro: Ordenamos con prioridades claras
     df = df.sort_values(
-        by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes'], 
-        ascending=[True, False, False]
-    ).reset_index(drop=True)
+        by=['Grupo', 'Puntos_Fase2', 'F2_TieBreak_Nuevos_Clientes', 'F1_Venta_23_Ene_Porcentaje'], 
+        ascending=[True, False, False, False]
+    )
     
-    # Ahora sí, la posición se basa en el orden ya desempatado
+    # Recalculamos posiciones dentro de cada grupo después del ordenamiento
     df['Posicion_Grupo'] = df.groupby('Grupo').cumcount() + 1
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
     # --- 5. PESTAÑAS ---
-    tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
+    tabs = st.tabs([
         "📊 CLASIFICACIÓN A GRUPOS", "⚔️ GRUPOS", "🏆 MUNDIAL", "🥈 CONFEDERACIONES", 
         "📅 REGLAMENTO Y PUNTOS POR COMPETENCIA", "🖼️ EQUIPOS"
     ])
     
-    with tab1:
-        st.markdown("### 📊 Clasificación Inicial")
+    with tabs[0]:
         st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
-    with tab2:
+    with tabs[1]:
         cols = st.columns(4)
         for i, g in enumerate(grupos_labels):
             with cols[i]:
                 st.markdown(f"<div class='group-header'>GRUPO {g}</div>", unsafe_allow_html=True)
                 df_g = df[df['Grupo'] == g]
                 for _, row in df_g.iterrows():
-                    # Solo brilla en dorado si la fase global terminó
+                    # Resaltado solo si la fase terminó
                     estilo = "highlight-gold" if (row['Destino'] == 'Mundial' and fase_grupos_finalizada) else ""
                     draw_card(row['Equipo'], row['Capitan'], row['Puntos_Fase2'], "Puntos Totales", estilo)
 
-    with tab_mundial:
+    with tabs[2]:
         if fase_grupos_finalizada:
             st.markdown("## 🌍 FINAL COPA DEL MUNDO")
             df_m = df[df['Destino'] == 'Mundial'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-            hay_resultados_f3 = (df_m['F3_Pedidos_Por_Dia'] > 0).any()
             
-            if hay_resultados_f3:
+            # SOLO MOSTRAR SI HAY DATOS CARGADOS EN F3 (Mayor a 0)
+            if not df_m.empty and (df_m['F3_Pedidos_Por_Dia'] > 0).any():
                 best = df_m.iloc[0]; val = best['F3_Pedidos_Por_Dia']
                 st.balloons()
                 c1, c2 = st.columns([1, 2])
@@ -220,9 +214,9 @@ if datos_cargados:
         if fase_grupos_finalizada:
             st.markdown("## 🥈 FINAL COPA CONFEDERACIONES")
             df_c = df[df['Destino'] == 'Confederaciones'].sort_values('F3_Pedidos_Por_Dia', ascending=False)
-            hay_resultados_f3_c = (df_c['F3_Pedidos_Por_Dia'] > 0).any()
             
-            if hay_resultados_f3_c:
+            # SOLO MOSTRAR SI HAY DATOS CARGADOS EN F3 (Mayor a 0)
+            if not df_c.empty and (df_c['F3_Pedidos_Por_Dia'] > 0).any():
                 c1, c2, c3 = st.columns(3); meds = ["🥇 Oro", "🥈 Plata", "🥉 Bronce"]; clss = ["highlight-gold", "highlight-silver", "highlight-bronze"]
                 for i in range(min(3, len(df_c))):
                     row = df_c.iloc[i]; val = row['F3_Pedidos_Por_Dia']
@@ -236,13 +230,14 @@ if datos_cargados:
         else:
             st.markdown("<div class='wait-message'><h3>🥈 CLASIFICACIÓN CONFEDERACIONES</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
-    with tab_partidos:
+    # Enlaces externos siempre visibles
+    with tabs[4]:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
         st.markdown("## 📅 LA INFORMACIÓN SE IRÁ ACTUALIZANDO CON FOCO SOBRE LA COMPETENCIA MÁS RECIENTE")
         st.markdown(f"""<a href="https://viewer.ipaper.io/wurth-uruguay/world-cup/wurth-world-cup-2026/" target="_blank" style="text-decoration: none;"><div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'><span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER INFORMACIÓN 📊</span></div></a>""", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with tab_externo:
+    with tabs[5]:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
         st.markdown("## ⚽ EQUIPOS Y FORMACIONES")
         st.markdown(f"""<a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;"><div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'><span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER LA TARJETA DE CADA EQUIPO 🔗</span></div></a>""", unsafe_allow_html=True)
