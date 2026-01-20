@@ -239,7 +239,7 @@ if datos_cargados:
 
     with tab_regla:
         st.markdown("<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True)
-        st.markdown("## 📅 LA INFORMACIÓN SE IRÁ ACTUALIZANDO CON FOCO SOBRE LA COMPETENCIA MÁS RECIENTE")
+        st.markdown("## 📅 LA INFORMACIÓN SE IRÁ ACTUALIZANDO CON FOCO EN LA COMPETENCIA MÁS RECIENTE")
         st.markdown(f"""<a href="https://viewer.ipaper.io/wurth-uruguay/world-cup/wurth-world-cup-2026/" target="_blank" style="text-decoration: none;"><div style='display: inline-block; padding: 20px 50px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; margin-top:30px;'><span style='color: white !important; font-family: "WuerthExtra"; font-size: 24px;'>VER INFORMACIÓN 📊</span></div></a>""", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
