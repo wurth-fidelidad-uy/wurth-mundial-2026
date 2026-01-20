@@ -76,7 +76,7 @@ st.markdown(f"""
 # --- 2. FUNCIONES AUXILIARES ---
 def format_score(val):
     if pd.isna(val) or val == "": return "-"
-    if isinstance(val, float) and val.is_integer(): return int(val)
+    if isinstance(val, (int, float)) and float(val).is_integer(): return int(val)
     return val
 
 def draw_card(equipo, capitan, score_raw, label_score, border_class=""):
@@ -137,11 +137,12 @@ if datos_cargados:
     df['Destino'] = df['Posicion_Grupo'].apply(lambda x: 'Mundial' if x == 1 else 'Confederaciones')
 
     # --- 5. VISUALIZACIÓN EN PESTAÑAS ---
-    tab1, tab2, tab_mundial, tab_conf, tab_externo = st.tabs([
-        "📢 SORTEO", 
+    tab1, tab2, tab_mundial, tab_conf, tab_partidos, tab_externo = st.tabs([
+        "📊 CLASIFICACIÓN A GRUPOS", 
         "⚔️ GRUPOS", 
         "🏆 MUNDIAL", 
         "🥈 CONFEDERACIONES", 
+        "📅 PARTIDOS Y PUNTOS",
         "🖼️ EQUIPOS"
     ])
     
@@ -205,33 +206,31 @@ if datos_cargados:
             df_show['Pedidos por Día'] = df_show['Pedidos por Día'].apply(format_score)
             st.dataframe(df_show, hide_index=True, use_container_width=True)
 
+    with tab_partidos:
+        st.markdown(f"""
+            <div style='text-align: center; margin-top: 100px;'>
+                <h2 style='color: white !important; font-family: "WuerthExtra"; font-size: 45px; text-shadow: 2px 4px 10px rgba(0,0,0,0.9); margin-bottom: 50px;'>
+                    📅 PARTIDOS Y PUNTOS DEL CAMPEONATO
+                </h2>
+                <a href="#" target="_blank" style="text-decoration: none;">
+                    <div style='display: inline-block; padding: 24px 60px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.6);'>
+                        <span style='color: white !important; font-family: "WuerthExtra"; font-size: 26px; text-decoration: none !important;'>
+                            VER INFORMACIÓN <span style="margin-left:15px;">📊</span>
+                        </span>
+                    </div>
+                </a>
+            </div>
+        """, unsafe_allow_html=True)
+
     with tab_externo:
         st.markdown(f"""
             <div style='text-align: center; margin-top: 100px;'>
-                <h2 style='
-                    color: white !important; 
-                    font-family: "WuerthExtra"; 
-                    font-size: 45px; 
-                    text-shadow: 2px 4px 10px rgba(0,0,0,0.9);
-                    margin-bottom: 50px;
-                '>
+                <h2 style='color: white !important; font-family: "WuerthExtra"; font-size: 45px; text-shadow: 2px 4px 10px rgba(0,0,0,0.9); margin-bottom: 50px;'>
                     ⚽ EQUIPOS Y FORMACIONES
                 </h2>
                 <a href="http://www.wurth.com.uy" target="_blank" style="text-decoration: none;">
-                    <div style='
-                        display: inline-block;
-                        padding: 24px 60px;
-                        background-color: #cc0000;
-                        border-radius: 50px;
-                        border: 2px solid white;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-                    '>
-                        <span style='
-                            color: white !important; 
-                            font-family: "WuerthExtra"; 
-                            font-size: 26px;
-                            text-decoration: none !important;
-                        '>
+                    <div style='display: inline-block; padding: 24px 60px; background-color: #cc0000; border-radius: 50px; border: 2px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.6);'>
+                        <span style='color: white !important; font-family: "WuerthExtra"; font-size: 26px; text-decoration: none !important;'>
                             VER LA TARJETA DE CADA EQUIPO <span style="margin-left:15px;">🔗</span>
                         </span>
                     </div>
