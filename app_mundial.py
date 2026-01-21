@@ -7,8 +7,7 @@ import base64
 st.set_page_config(
     page_title="Würth World Cup 2026", 
     layout="wide", 
-    page_icon="logo_copa.png",
-    initial_sidebar_state="collapsed", # Inicia con la barra cerrada
+    page_icon="🏆",
     menu_items={
         'Get Help': None,
         'Report a bug': None,
@@ -23,11 +22,6 @@ ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&
 
 st.markdown(f"""
 <style>
-    /* BLOQUEO DE PANEL DE PROYECTOS/NAVEGACIÓN */
-    [data-testid="stSidebarNav"] {{
-        display: none !important;
-    }}
-    
     /* Ocultar menús nativos de Streamlit */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
