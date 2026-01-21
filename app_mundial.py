@@ -212,7 +212,7 @@ if datos_cargados:
             else:
                 st.markdown("<div class='wait-message'><h3>⏳ COMPETENCIA EN CURSO</h3><p>El campeón aparecerá aquí una vez culminada la competencia de Pedidos por día.</p></div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN AL MUNDIAL</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='wait-message'><h3>🏆 CLASIFICACIÓN A FASE FINAL DEL MUNDIAL</h3><p>Esta pestaña se habilitará una vez que se completen los 14 puntos en juego de cada grupo.</p></div>", unsafe_allow_html=True)
 
     with tab_conf:
         if fase_grupos_finalizada:
