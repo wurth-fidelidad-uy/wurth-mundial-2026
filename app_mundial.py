@@ -22,7 +22,6 @@ ESTADIO_BG = "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&
 
 st.markdown(f"""
 <style>
-    /* Ocultar menús nativos de Streamlit */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
@@ -144,24 +143,21 @@ with c2:
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     st.title("WÜRTH WORLD CUP 2026")
     st.markdown("##### ⚽ Tablero Oficial de Competencia")
+
 # --- 4. LÓGICA DE DATOS ---
 archivo_excel = "Planilla_Wurth_World_Cup_2026.xlsx"
 try:
     df = pd.read_excel(archivo_excel)
-    # --- CAMBIO SOLICITADO: Formatear a porcentaje (ej: 0.019 -> 1.9%) ---
-    if "F1_Venta_23_Ene_Porcentaje" in df.columns:
-        df["F1_Venta_23_Ene_Porcentaje"] = df["F1_Venta_23_Ene_Porcentaje"].apply(
-            lambda x: f"{float(x)*100:.1f}%".replace('.', ',') if pd.notnull(x) else "-"
-        )
-    # --------------------------------------------------------------------
     datos_cargados = True
 except:
     st.error(f"⚠️ ERROR: No se pudo leer el archivo '{archivo_excel}'.")
     datos_cargados = False
 
 if datos_cargados:
+    # Mantenemos F1_Venta_23_Ene_Porcentaje como número para ordenar correctamente
+    df["F1_Venta_23_Ene_Porcentaje"] = pd.to_numeric(df["F1_Venta_23_Ene_Porcentaje"], errors='coerce').fillna(0)
+
     # A. RANKING FASE 1
-    # Nota: El sort_values seguirá funcionando aunque sea texto porque se hizo antes o se puede basar en el orden del Excel
     df = df.sort_values(by="F1_Venta_23_Ene_Porcentaje", ascending=False).reset_index(drop=True)
     grupos_labels = ['A', 'B', 'C', 'D']
     df['Grupo'] = [grupos_labels[i % 4] for i in range(len(df))]
@@ -175,7 +171,6 @@ if datos_cargados:
         idx_g = df[df['Grupo'] == grupo].index
         puntos_acumulados_grupo = 0
         for kpi, pts in reglas.items():
-            # Aseguramos que los KPIs sean numéricos para el cálculo de puntos
             df[kpi] = pd.to_numeric(df[kpi], errors='coerce').fillna(0)
             max_val = df.loc[idx_g, kpi].max()
             if max_val > 0:
@@ -202,7 +197,12 @@ if datos_cargados:
     ])
     
     with tab_clasif:
-        st.dataframe(df[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
+        # Formateamos solo para la vista de tabla
+        df_view = df.copy()
+        df_view["F1_Venta_23_Ene_Porcentaje"] = df_view["F1_Venta_23_Ene_Porcentaje"].apply(
+            lambda x: f"{float(x)*100:.1f}%".replace('.', ',') if x != 0 else "-"
+        )
+        st.dataframe(df_view[['Equipo', 'Capitan', 'F1_Venta_23_Ene_Porcentaje', 'Grupo']].sort_values('Grupo'), hide_index=True, use_container_width=True)
 
     with tab_grupos:
         cols = st.columns(4)
